@@ -1,0 +1,250 @@
+const snapshotUrl = "https://hub.snapshot.org/graphql";
+const theGraphUrl = "https://api.studio.thegraph.com/query/44690/uniswap-v3-subgraph/version/latest";
+
+/* Components used to query Snapshot API */
+
+/**
+ * Method to query all proposals in a given space.
+ * @param input Includes the space of the proposals to query (state is optional)
+ * @returns The ids of all proposals in the given space
+ */
+const queryAllProposals = async (input) => {
+  let queriedProposal = await _queryAllProposals(input.space);
+  return queriedProposal.proposals;  
+}
+
+/**
+ * Use this method to query the total score of all proposals in a given space.
+ * @param input Includes the proposals to query
+ * @returns The scores of all proposals in the given space
+ */
+const queryAllProposalScores = async(input) => {
+  let proposalScores = input.proposals
+    .map(proposal => proposal.scores.reduce((sum, score) => sum + score, 0))
+    .reduce((total, currentSum) => total + currentSum, 0);
+  return proposalScores;
+}
+
+/**
+ * Use this method to query the number of proposals in a given space by a given author.
+ * @param input Includes the space and author of the proposals to query
+ * @returns The number of proposals in the given space by the given author
+ */
+const queryProposalAuthorCount = async(input) => {
+  let proposalAuthorCount = input.proposals.reduce((acc, proposal) => {
+    if (proposal.author === input.author) {
+      return acc + 1;
+    }
+    return acc;
+  }, 0);
+  return proposalAuthorCount;
+}
+
+const _queryAllProposals = async (space) => {
+  const query =`
+    query GetTotalProposals($space: String!) {
+      proposals (
+        first: 80,
+        skip: 0,
+        where: {
+          space: $space,
+          state: "closed"
+        },
+        orderBy: "created",
+        orderDirection: desc
+      ) {
+        id
+        author
+        created
+        scores
+      }
+    }`;
+  const variables = {"space": space};
+  const operationName = "GetTotalProposals";
+  const response = await _queryGraphQL(query, variables, operationName, "Snapshot");
+  return response.data;
+}
+
+/**
+ * Use this method to query the voting power of a given voter for a given proposal.
+ * @param input Includes the space, voter, and proposal to query
+ * @returns The voting power of the given voter for the given proposal
+*/
+const queryVotingPowerForProposals = async (input) => {
+  let queriedVotes =
+    await _queryVotingPowerForProposals(
+      input.space,
+      input.voter,
+      input.proposalIn
+    );
+  if (queriedVotes.votes.length === 0) {
+    return 0;
+  }
+  let votingPower = queriedVotes.votes.reduce((acc, vote) => acc + vote.vp, 0);
+  return votingPower;
+}
+
+const _queryVotingPowerForProposals = async (space, voter, proposalIn) => {
+  const query = `
+      query GetAllVotingPower($space: String!, $voter: String!, $proposalIn: [String!]!) { 
+        votes (
+          first: 500,
+          skip: 0,
+          where: {
+            space: $space,
+            voter: $voter,
+            proposal_in: $proposalIn
+          },
+          orderBy: "created",
+          orderDirection: asc
+        ) {
+          vp
+        }
+      }`;
+  const variables = {
+    "space": space,
+    "voter": voter,
+    "proposalIn": proposalIn
+  };
+  const operationName = "GetAllVotingPower";
+  const response = await _queryGraphQL(query, variables, operationName, "Snapshot");
+  return response.data;
+}
+
+const queryTradingVolume = async (input) => {
+  let queriedVolume = await _queryTradingVolume(input.user);
+  if (queriedVolume.user == null) {
+    return [0, 0];
+  }
+  let twLiqUSD = queriedVolume.user.twLiqUSD;
+  let volume = queriedVolume.user.volumeUSD;
+
+  return [twLiqUSD, volume];
+}
+
+const _queryTradingVolume = async (address) => {
+  const query = `
+      query GetUniswapUser($address: String!) { 
+        user (
+          id: $address
+        ) {
+          twLiqUSD
+          volumeUSD
+        }
+      }`;
+  const variables = {
+    "address": address,
+  };
+  const operationName = "GetUniswapUser";
+  const response = await _queryGraphQL(query, variables, operationName, "The Graph");
+  return response.data;
+}
+
+
+const _queryGraphQL = async (query, variables = {}, operationName = "", api) => {
+  const data = JSON.stringify({
+    query: query,
+    variables: variables,
+    operationName: operationName,
+  });
+
+  const url = api === "Snapshot" ? snapshotUrl : theGraphUrl;
+  const snapshotQueryResponse = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: data,
+  });
+
+  if (snapshotQueryResponse.error) {
+    const responseBody = await snapshotQueryResponse.response.json();
+    console.error('Detailed Response Body:', responseBody);
+    throw new Error(
+      `'Detailed Response Body:', ${responseBody}`
+    );
+  };
+  const res = await snapshotQueryResponse.json();
+  if (api === "The Graph") {
+    console.log('Detailed Response Body:', res);
+  }
+  return res;
+}
+
+/* Main */
+
+const space = args[0];
+const user = args[1];
+console.log(`Getting Activity Score for ${user} in ${space}`);
+
+const splitArrayIntoChunks = (array, chunkSize) => {
+  let result = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    let chunk = array.slice(i, i + chunkSize);
+    result.push(chunk);
+  }
+  return result;
+}
+
+/**
+ * To calculate the activity score for a given user in a given space in Snapshot.
+ * @param space Name of the space to query
+ * @param user Address of the user to query
+ * @returns Score of the user in the given space
+ */
+const calculateSnapshotScore = async (space, user) => {
+  const totalProposals = await queryAllProposals({space: space});
+  console.log(`Total Proposals in ${space} is ${totalProposals.length}`);
+  let proposalIds = totalProposals.map(proposal => proposal.id);
+
+  // To avoid payload size limit which is 2048 bytes,
+  // we split the array of proposal ids into chunks of 20
+  const chunkedProposals = splitArrayIntoChunks(proposalIds, 20);
+  let votingPowerCount = 0;
+
+  for (let i = 0; i < chunkedProposals.length; i++) {
+    const chunkedProposalIds = chunkedProposals[i];
+    votingPowerCount += await queryVotingPowerForProposals({
+      space: space,
+      voter: user,
+      proposalIn: chunkedProposalIds
+    });
+    console.log(`Voting Power Count for ${user} in ${space} is ${votingPowerCount}`);
+  }
+
+  const totalVotingPower = await queryAllProposalScores({proposals: totalProposals});
+  console.log(`Total Voting Power for in ${space} is ${totalVotingPower}`);
+  console.log(`Ratio of voting power for ${user} in ${space} is ${votingPowerCount / totalVotingPower}`)
+  const authorCount = await queryProposalAuthorCount({proposals: totalProposals, author: user});
+
+  let score = 0;
+  if (authorCount > 0) {
+    score = authorCount * 1000;
+  }
+
+  // @TODO - Fix this to calculate right score
+  score += votingPowerCount;
+  return score;
+}
+
+/**
+ * To calculate the on-chain activity score for a given user in Uniswap.
+ * @param user Address of the user to query
+ * @returns Score of the user in Uniswap
+ */
+const calculateUniswapScore = async (user) => {
+  const [twLiqUSD, volumeUSD] = await queryTradingVolume({user: user});
+  console.log(`Total Trading Volume for ${user} is ${volumeUSD}`);
+  console.log(`Total TWLiqUSD for ${user} is ${twLiqUSD}`);
+  let score = 0;
+  score += twLiqUSD;
+  score += volumeUSD;
+  return score;
+}
+
+let score = await calculateSnapshotScore(space, user);
+score += await calculateUniswapScore(user);
+
+console.log(`Activity Score for ${user} in ${space} is ${score}`);
+
+return Functions.encodeUint256(Math.round(score));
