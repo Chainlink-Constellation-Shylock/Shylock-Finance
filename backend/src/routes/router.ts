@@ -1,5 +1,5 @@
 import express, {Request, Response} from 'express';
-import * as Functions from '../chainlink_functions/runFunctions';
+import {querySnapshotPoints, queryUniswapPoints} from '../chainlink_functions';
 
 const router = express.Router();
 
@@ -7,7 +7,7 @@ router.get('/:dao/:username', async (req: Request, res: Response, next) => {
     try {
         const dao = req.params.dao;
         const userAddr  = req.params.username;
-        const userPoint = await Functions.queryUserPoints(dao, userAddr);
+        const userPoint = await querySnapshotPoints(dao, userAddr);
         console.log(userPoint);
 
         const userPointString = userPoint?.toString();

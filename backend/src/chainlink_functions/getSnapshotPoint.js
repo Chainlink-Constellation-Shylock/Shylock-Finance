@@ -1,5 +1,4 @@
 const snapshotUrl = "https://hub.snapshot.org/graphql";
-const theGraphUrl = "https://api.studio.thegraph.com/query/44690/uniswap-v3-subgraph/version/latest";
 
 /* Components used to query Snapshot API */
 
@@ -61,7 +60,7 @@ const _queryAllProposals = async (space) => {
     }`;
   const variables = {"space": space};
   const operationName = "GetTotalProposals";
-  const response = await _queryGraphQL(query, variables, operationName, "Snapshot");
+  const response = await _queryGraphQL(query, variables, operationName);
   return response.data;
 }
 
@@ -107,7 +106,7 @@ const _queryVotingPowerForProposals = async (space, voter, proposalIn) => {
     "proposalIn": proposalIn
   };
   const operationName = "GetAllVotingPower";
-  const response = await _queryGraphQL(query, variables, operationName, "Snapshot");
+  const response = await _queryGraphQL(query, variables, operationName);
   return response.data;
 }
 
@@ -122,34 +121,14 @@ const queryTradingVolume = async (input) => {
   return [twLiqUSD, volume];
 }
 
-const _queryTradingVolume = async (address) => {
-  const query = `
-      query GetUniswapUser($address: String!) { 
-        user (
-          id: $address
-        ) {
-          twLiqUSD
-          volumeUSD
-        }
-      }`;
-  const variables = {
-    "address": address,
-  };
-  const operationName = "GetUniswapUser";
-  const response = await _queryGraphQL(query, variables, operationName, "The Graph");
-  return response.data;
-}
-
-
-const _queryGraphQL = async (query, variables = {}, operationName = "", api) => {
+const _queryGraphQL = async (query, variables = {}, operationName = "") => {
   const data = JSON.stringify({
     query: query,
     variables: variables,
     operationName: operationName,
   });
 
-  const url = api === "Snapshot" ? snapshotUrl : theGraphUrl;
-  const snapshotQueryResponse = await fetch(url, {
+  const snapshotQueryResponse = await fetch(snapshotUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -165,9 +144,6 @@ const _queryGraphQL = async (query, variables = {}, operationName = "", api) => 
     );
   };
   const res = await snapshotQueryResponse.json();
-  if (api === "The Graph") {
-    console.log('Detailed Response Body:', res);
-  }
   return res;
 }
 
@@ -239,23 +215,7 @@ const calculateSnapshotScore = async (space, user) => {
   return score;
 }
 
-/**
- * To calculate the on-chain activity score for a given user in Uniswap.
- * @param user Address of the user to query
- * @returns Score of the user in Uniswap
- */
-const calculateUniswapScore = async (user) => {
-  const [twLiqUSD, volumeUSD] = await queryTradingVolume({user: user});
-  console.log(`Total Trading Volume for ${user} is ${volumeUSD}`);
-  console.log(`Total TWLiqUSD for ${user} is ${twLiqUSD}`);
-  let score = 0;
-  score += twLiqUSD;
-  score += volumeUSD;
-  return score;
-}
-
 let score = await calculateSnapshotScore(space, user);
-score += await calculateUniswapScore(user);
 
 console.log(`Activity Score for ${user} in ${space} is ${score}`);
 

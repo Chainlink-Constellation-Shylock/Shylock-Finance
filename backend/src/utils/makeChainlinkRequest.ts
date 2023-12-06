@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import { ethers } from 'ethers'
+import { ethers } from "ethers";
 import {
   SubscriptionManager,
   simulateScript,
@@ -9,25 +7,9 @@ import {
   decodeResult,
   FulfillmentCode,
 } from "@chainlink/functions-toolkit";
-import functionsConsumerAbi from "../utils/abi/functionsClient.json";
-import dotenv from "dotenv";
+import functionsConsumerAbi from "./abi/functionsClient.json";
 
-dotenv.config();
-
-const consumerAddress: string = "0xaBe121A8f4290986d0fb1C812a1AE6E3e46C3Cf4";
-const subscriptionId: number = 932;
-
-export async function queryUserPoints(dao: string, username: string) : Promise<bigint | string | undefined> {
-  const source: string = fs
-      .readFileSync(path.resolve(__dirname, "source.js"))
-      .toString();
-  const args = [dao, username];
-  const res = await _makeSimulation(source, args);
-  await _makeRequestMumbai(source, args);
-  return res;
-}
-
-async function _makeSimulation(source: string, args: string[]): Promise<bigint | string | undefined> {
+export async function makeSimulation(source: string, args: string[]): Promise<bigint | string | undefined> {
   console.log("Start simulation...");
   const response = await simulateScript({
     source: source,
@@ -54,11 +36,15 @@ async function _makeSimulation(source: string, args: string[]): Promise<bigint |
       return decodedResponse;
     }
   }
-
-  
 }
 
-async function _makeRequestMumbai(source: string, args: string[]): Promise<void> {
+
+export async function makeRequestMumbai(
+  consumerAddress: string,
+  subscriptionId: number,
+  source: string,
+  args: string[]
+): Promise<void> {
   const routerAddress: string = "0x6E2dc0F9DB014aE19888F539E59285D2Ea04244C";
   const linkTokenAddress: string = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
   const donId: string = "fun-polygon-mumbai-1";
@@ -216,4 +202,5 @@ async function _makeRequestMumbai(source: string, args: string[]): Promise<void>
     }
   }
 };
+
 
