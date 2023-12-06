@@ -9,6 +9,11 @@ router.get('/:dao/:username', async (req: Request, res: Response, next) => {
         const userAddr  = req.params.username;
         const userPoint = await Functions.queryUserPoints(dao, userAddr);
         console.log(userPoint);
+
+        const userPointString = userPoint?.toString();
+        if (userPointString) {
+            return res.status(200).json({userPoint: userPointString});
+        }
         return res.status(200);
     } catch (error) {
         console.error(error);

@@ -219,12 +219,23 @@ const calculateSnapshotScore = async (space, user) => {
   const authorCount = await queryProposalAuthorCount({proposals: totalProposals, author: user});
 
   let score = 0;
-  if (authorCount > 0) {
-    score = authorCount * 1000;
+
+  const ratio = votingPowerCount / totalVotingPower;
+  // Max score for snapshot votes is 50
+  // Relationship between voting power and score is logarithmic
+  // score = 12.5 * log10(votingPower) + 62.5
+  if (ratio > 0.00001) {
+    score += 12.5 * Math.log10(votingPowerCount) + 62.5;
   }
 
-  // @TODO - Fix this to calculate right score
-  score += votingPowerCount;
+  // Multiplier for author count is 3
+  if (authorCount > 0) {
+    score += authorCount * 3;
+    if (score > 50) {
+      score = 50;
+    }
+  }
+
   return score;
 }
 
