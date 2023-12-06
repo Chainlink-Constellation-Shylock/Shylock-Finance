@@ -5,13 +5,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// @TODO Deploy another consumer contract dedicated to Uniswap V3
-const consumerAddress: string = "0xaBe121A8f4290986d0fb1C812a1AE6E3e46C3Cf4";
+const consumerAddress: string = "0x62A34b8f123D8144dA6F4f91B95046a4F0Df1Af5";
 const subscriptionId: number = 932;
 
-export async function queryUniswapPoints(dao: string, username: string) : Promise<bigint | string | undefined> {
+export async function querySnapshotPoints(dao: string, username: string) : Promise<bigint | string | undefined> {
   const source: string = fs
-      .readFileSync(path.resolve(__dirname, "getUniswapPoint.js"))
+      .readFileSync(path.resolve(__dirname, "getSnapshotPoints.js"))
       .toString();
   const args = [dao, username];
   const res = await makeSimulation(source, args);
