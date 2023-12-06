@@ -202,7 +202,8 @@ const calculateSnapshotScore = async (space, user) => {
   const chunkedProposals = splitArrayIntoChunks(proposalIds, 20);
   let votingPowerCount = 0;
 
-  for (let i = 0; i < chunkedProposals.length; i++) {
+  const length = chunkedProposals.length < 3 ? chunkedProposals.length : 3;
+  for (let i = 0; i < length; i++) {
     const chunkedProposalIds = chunkedProposals[i];
     votingPowerCount += await queryVotingPowerForProposals({
       space: space,

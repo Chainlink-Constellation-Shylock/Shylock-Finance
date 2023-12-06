@@ -1,5 +1,5 @@
 {
-  "name": "onyx-server",
+  "name": "shylock-server",
   "version": "1.0.0",
   "description": "Server that processes user information of Seamless",
   "main": "index.js",

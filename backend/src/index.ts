@@ -19,7 +19,8 @@ const options: cors.CorsOptions = {
   }
 };
 
-app.use(cors(options));
+// Allow all origins for now, testing purpose
+app.use(cors());
 app.use(express.json());
 app.use('/', router);
 app.use(errorHandler);

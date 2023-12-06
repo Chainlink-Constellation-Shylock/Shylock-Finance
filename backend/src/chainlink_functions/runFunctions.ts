@@ -34,7 +34,6 @@ async function _makeSimulation(source: string, args: string[]): Promise<bigint |
     args: args,
     bytesArgs: [], // bytesArgs - arguments can be encoded off-chain to bytes.
     secrets: {}, // no secrets in this example
-    numAllowedQueries: 10, // Default is 5, which is too low for this example
   });
 
   console.log("Simulation result", response);
