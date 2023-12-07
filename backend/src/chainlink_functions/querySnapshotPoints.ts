@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const consumerAddress: string = "0x62A34b8f123D8144dA6F4f91B95046a4F0Df1Af5";
+const consumerAddress: string = "0xAD130C06E7827F2E455f31C49ea82a9879136D27";
 const subscriptionId: number = 932;
 
 export async function querySnapshotPoints(dao: string, username: string) : Promise<bigint | string | undefined> {

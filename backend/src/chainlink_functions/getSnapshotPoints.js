@@ -186,19 +186,21 @@ const calculateSnapshotScore = async (space, user) => {
   let score = 0;
 
   const ratio = votingPowerCount / totalVotingPower;
-  // Max score for snapshot votes is 50
+  // Max score for snapshot votes is 100
   // Relationship between voting power ratio and score is logarithmic
-  // score = 12.5 * log10(votingPowerRatio) + 62.5
+  // score = 25 * log10(votingPowerRatio) + 125
   if (ratio > 0.00001) {
-    score += 12.5 * Math.log10(ratio) + 62.5;
+    score += 25 * Math.log10(ratio) + 125;
   }
 
   // Multiplier for author count is 3
   if (authorCount > 0) {
     score += authorCount * 3;
-    if (score > 50) {
-      score = 50;
-    }
+  }
+
+  // Max score for snapshot votes is 100
+  if (score > 100) {
+    score = 100;
   }
 
   return score;

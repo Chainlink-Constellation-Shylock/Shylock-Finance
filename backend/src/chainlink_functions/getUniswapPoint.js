@@ -1,6 +1,6 @@
 const theGraphUrl = "https://api.studio.thegraph.com/query/44690/uniswap-v3-subgraph/version/latest";
 
-/* Components used to query Snapshot API */
+/* Components used to query The Graph API of Uniswap V3 */
 
 /**
  * Component to calculate the total time-weighted liquidity and trading volumes for a given user.
@@ -60,16 +60,13 @@ const _queryGraphQL = async (query, variables = {}, operationName = "") => {
     );
   };
   const res = await theGraphQueryResponse.json();
-  if (api === "The Graph") {
-    console.log('Detailed Response Body:', res);
-  }
   return res;
 }
 
 /* Main */
 
 const user = args[0];
-console.log(`Getting Activity Score for ${user} in ${space}`);
+console.log(`Getting Protocol Activity Score for ${user} in Uniswap`);
 
 /**
  * To calculate the on-chain activity score for a given user in Uniswap.
@@ -81,13 +78,12 @@ const calculateUniswapScore = async (user) => {
   console.log(`Total Trading Volume for ${user} is ${volumeUSD}`);
   console.log(`Total TWLiqUSD for ${user} is ${twLiqUSD}`);
   let score = 0;
-  score += twLiqUSD;
-  score += volumeUSD;
+  score = (twLiqUSD + volumeUSD) * 1e-4;
   return score;
 }
 
 let score = await calculateUniswapScore(user);
 
-console.log(`Activity Score for ${user} in ${space} is ${score}`);
+console.log(`Protocol Activity Score for ${user} in Uniswap is ${score}`);
 
 return Functions.encodeUint256(Math.round(score));

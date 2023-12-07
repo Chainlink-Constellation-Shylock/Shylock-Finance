@@ -5,8 +5,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// @TODO Deploy another consumer contract dedicated to Uniswap V3
-const consumerAddress: string = "0xaBe121A8f4290986d0fb1C812a1AE6E3e46C3Cf4";
+const consumerAddress: string = "0x3c6a554d620b8fcbeb7572b32a5165346be0f1bb";
 const subscriptionId: number = 932;
 
 export async function queryUniswapPoints(username: string) : Promise<bigint | string | undefined> {
