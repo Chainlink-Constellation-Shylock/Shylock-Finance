@@ -5,15 +5,15 @@ import "../../contracts/Comptroller.sol";
 import "../../contracts/PriceOracle.sol";
 
 contract ComptrollerKovan is Comptroller {
-    function getCompAddress() override public view returns (address) {
-        return 0x61460874a7196d6a22D1eE4922473664b3E95270;
-    }
+    // function getCompAddress() override public view returns (address) {
+    //     return 0x61460874a7196d6a22D1eE4922473664b3E95270;
+    // }
 }
 
 contract ComptrollerRopsten is Comptroller {
-    function getCompAddress() override public view returns (address) {
-        return 0xf76D4a441E4ba86A923ce32B89AFF89dBccAA075;
-    }
+    // function getCompAddress() override public view returns (address) {
+    //     return 0xf76D4a441E4ba86A923ce32B89AFF89dBccAA075;
+    // }
 }
 
 contract ComptrollerHarness is Comptroller {
@@ -44,9 +44,9 @@ contract ComptrollerHarness is Comptroller {
         compAddress = compAddress_;
     }
 
-    function getCompAddress() override public view returns (address) {
-        return compAddress;
-    }
+    // function getCompAddress() override public view returns (address) {
+    //     return compAddress;
+    // }
 
     /**
      * @notice Set the amount of COMP distributed per block
@@ -65,8 +65,8 @@ contract ComptrollerHarness is Comptroller {
         for (uint i = 0; i < allMarkets_.length; i++) {
             CToken cToken = allMarkets_[i];
             Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
-            updateCompSupplyIndex(address(cToken));
-            updateCompBorrowIndex(address(cToken), borrowIndex);
+            // updateCompSupplyIndex(address(cToken));
+            // updateCompBorrowIndex(address(cToken), borrowIndex);
         }
 
         Exp memory totalUtility = Exp({mantissa: 0});
@@ -84,7 +84,7 @@ contract ComptrollerHarness is Comptroller {
         for (uint i = 0; i < allMarkets_.length; i++) {
             CToken cToken = allMarkets[i];
             uint newSpeed = totalUtility.mantissa > 0 ? mul_(compRate, div_(utilities[i], totalUtility)) : 0;
-            setCompSpeedInternal(cToken, newSpeed, newSpeed);
+            // setCompSpeedInternal(cToken, newSpeed, newSpeed);
         }
     }
 
@@ -97,34 +97,34 @@ contract ComptrollerHarness is Comptroller {
     }
 
     function harnessDistributeAllBorrowerComp(address cToken, address borrower, uint marketBorrowIndexMantissa) public {
-        distributeBorrowerComp(cToken, borrower, Exp({mantissa: marketBorrowIndexMantissa}));
-        compAccrued[borrower] = grantCompInternal(borrower, compAccrued[borrower]);
+        // distributeBorrowerComp(cToken, borrower, Exp({mantissa: marketBorrowIndexMantissa}));
+        // compAccrued[borrower] = grantCompInternal(borrower, compAccrued[borrower]);
     }
 
     function harnessDistributeAllSupplierComp(address cToken, address supplier) public {
-        distributeSupplierComp(cToken, supplier);
-        compAccrued[supplier] = grantCompInternal(supplier, compAccrued[supplier]);
+        // distributeSupplierComp(cToken, supplier);
+        // compAccrued[supplier] = grantCompInternal(supplier, compAccrued[supplier]);
     }
 
-    function harnessUpdateCompBorrowIndex(address cToken, uint marketBorrowIndexMantissa) public {
-        updateCompBorrowIndex(cToken, Exp({mantissa: marketBorrowIndexMantissa}));
+    function harnessupdateCompBorrowIndex(address cToken, uint marketBorrowIndexMantissa) public {
+        // updateCompBorrowIndex(cToken, Exp({mantissa: marketBorrowIndexMantissa}));
     }
 
-    function harnessUpdateCompSupplyIndex(address cToken) public {
-        updateCompSupplyIndex(cToken);
+    function harnessupdateCompSupplyIndex(address cToken) public {
+        // updateCompSupplyIndex(cToken);
     }
 
-    function harnessDistributeBorrowerComp(address cToken, address borrower, uint marketBorrowIndexMantissa) public {
-        distributeBorrowerComp(cToken, borrower, Exp({mantissa: marketBorrowIndexMantissa}));
+    function harnessdistributeBorrowerComp(address cToken, address borrower, uint marketBorrowIndexMantissa) public {
+        // distributeBorrowerComp(cToken, borrower, Exp({mantissa: marketBorrowIndexMantissa}));
     }
 
-    function harnessDistributeSupplierComp(address cToken, address supplier) public {
-        distributeSupplierComp(cToken, supplier);
+    function harnessdistributeSupplierComp(address cToken, address supplier) public {
+        // distributeSupplierComp(cToken, supplier);
     }
 
     function harnessTransferComp(address user, uint userAccrued, uint threshold) public returns (uint) {
         if (userAccrued > 0 && userAccrued >= threshold) {
-            return grantCompInternal(user, userAccrued);
+            // return grantCompInternal(user, userAccrued);
         }
         return userAccrued;
     }
@@ -132,7 +132,7 @@ contract ComptrollerHarness is Comptroller {
     function harnessAddCompMarkets(address[] memory cTokens) public {
         for (uint i = 0; i < cTokens.length; i++) {
             // temporarily set compSpeed to 1 (will be fixed by `harnessRefreshCompSpeeds`)
-            setCompSpeedInternal(CToken(cTokens[i]), 1, 1);
+            // setCompSpeedInternal(CToken(cTokens[i]), 1, 1);
         }
     }
 

@@ -18,9 +18,9 @@ contract ComptrollerScenario is Comptroller {
         compAddress = compAddress_;
     }
 
-    function getCompAddress() override public view returns (address) {
-        return compAddress;
-    }
+    // function getCompAddress() override public view returns (address) {
+    //     return compAddress;
+    // }
 
     function setBlockNumber(uint number) public {
         blockNumber = number;
@@ -55,8 +55,8 @@ contract ComptrollerScenario is Comptroller {
         for (uint i = 0; i < allMarkets_.length; i++) {
             CToken cToken = allMarkets_[i];
             Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
-            updateCompSupplyIndex(address(cToken));
-            updateCompBorrowIndex(address(cToken), borrowIndex);
+            // distributeBorrowerComp(address(cToken));
+            // updateCompBorrowIndex(address(cToken), borrowIndex);
         }
 
         Exp memory totalUtility = Exp({mantissa: 0});
@@ -74,7 +74,7 @@ contract ComptrollerScenario is Comptroller {
         for (uint i = 0; i < allMarkets_.length; i++) {
             CToken cToken = allMarkets[i];
             uint newSpeed = totalUtility.mantissa > 0 ? mul_(compRate, div_(utilities[i], totalUtility)) : 0;
-            setCompSpeedInternal(cToken, newSpeed, newSpeed);
+            // setCompSpeedInternal(cToken, newSpeed, newSpeed);
         }
     }
 }

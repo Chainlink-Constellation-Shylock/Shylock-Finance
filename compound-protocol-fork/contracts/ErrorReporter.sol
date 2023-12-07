@@ -20,7 +20,8 @@ contract ComptrollerErrorReporter {
         REJECTION,
         SNAPSHOT_ERROR,
         TOO_MANY_ASSETS,
-        TOO_MUCH_REPAY
+        TOO_MUCH_REPAY,
+        DAO_CAP_EXCEEDED
     }
 
     enum FailureInfo {
@@ -78,6 +79,8 @@ contract TokenErrorReporter {
     error TransferNotAllowed();
     error TransferNotEnough();
     error TransferTooMuch();
+
+    error addDaoReserveComptrollerRejection(uint256 errorCode);
 
     error MintComptrollerRejection(uint256 errorCode);
     error MintFreshnessCheck();

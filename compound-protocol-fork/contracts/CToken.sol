@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
 
-import "./ComptrollerInterface.sol";
+import "./ShylockComptrollerInterface.sol";
 import "./CTokenInterfaces.sol";
 import "./ErrorReporter.sol";
 import "./EIP20Interface.sol";
@@ -23,7 +23,7 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
      * @param symbol_ EIP-20 symbol of this token
      * @param decimals_ EIP-20 decimal precision of this token
      */
-    function initialize(ComptrollerInterface comptroller_,
+    function initialize(ShylockComptrollerInterface comptroller_,
                         InterestRateModel interestRateModel_,
                         uint initialExchangeRateMantissa_,
                         string memory name_,
@@ -898,13 +898,13 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
       * @dev Admin function to set a new comptroller
       * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
       */
-    function _setComptroller(ComptrollerInterface newComptroller) override public returns (uint) {
+    function _setComptroller(ShylockComptrollerInterface newComptroller) override public returns (uint) {
         // Check caller is admin
         if (msg.sender != admin) {
             revert SetComptrollerOwnerCheck();
         }
-
-        ComptrollerInterface oldComptroller = comptroller;
+        
+        ShylockComptrollerInterface oldComptroller = comptroller;
         // Ensure invoke comptroller.isComptroller() returns true
         require(newComptroller.isComptroller(), "marker method returned false");
 
