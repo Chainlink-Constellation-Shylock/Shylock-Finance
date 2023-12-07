@@ -16,4 +16,9 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
         return NO_ERROR;
     }
 
+    function addMemberReserve(uint reserveAmount) external returns (uint) {
+        addMemberReserveInternal(reserveAmount);
+        return NO_ERROR;
+    }
+
 }

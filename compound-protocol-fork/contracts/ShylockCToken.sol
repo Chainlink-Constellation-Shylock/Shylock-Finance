@@ -27,5 +27,20 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
     }
 
+    function addMemberReserveInternal(uint reserveAmount) internal nonReentrant {
+        /* Fail if Dao not allowed */
+        uint allowed = comptroller.addMemberReserveAllowed(address(this), msg.sender, reserveAmount);
+        if (allowed != 0) {
+            revert addMemberReserveComptrollerRejection(allowed);
+        }
+        
+        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+
+        underlyingReserves[msg.sender] = add_(underlyingReserves[msg.sender], actualReserveAmount);
+
+        emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserves[msg.sender]);
+
+    }
+
 
 }

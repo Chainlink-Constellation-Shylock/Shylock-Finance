@@ -21,7 +21,10 @@ contract ComptrollerErrorReporter {
         SNAPSHOT_ERROR,
         TOO_MANY_ASSETS,
         TOO_MUCH_REPAY,
-        DAO_CAP_EXCEEDED
+        DAO_CAP_EXCEEDED,
+        DAO_NOT_REGISTERED,
+        MEMBER_CAP_EXCEEDED,
+        NOT_DAO_MEMBER
     }
 
     enum FailureInfo {
@@ -81,6 +84,7 @@ contract TokenErrorReporter {
     error TransferTooMuch();
 
     error addDaoReserveComptrollerRejection(uint256 errorCode);
+    error addMemberReserveComptrollerRejection(uint256 errorCode);
 
     error MintComptrollerRejection(uint256 errorCode);
     error MintFreshnessCheck();
