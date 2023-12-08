@@ -317,10 +317,6 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         return daoCap.mulDiv(4e13 * reputation, MANTISSA);
     }
 
-    function _getComptrollerAddress() internal view returns (address) {
-        return comptroller;
-    }
-
     modifier onlyOwner() {
         if (msg.sender != owner) {
             revert InvalidAddress();
@@ -343,7 +339,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
     }
 
     modifier onlyComptroller() {
-        if (msg.sender != _getComptrollerAddress()) {
+        if (msg.sender != comptroller) {
             revert InvalidAddress();
         }
         _;
