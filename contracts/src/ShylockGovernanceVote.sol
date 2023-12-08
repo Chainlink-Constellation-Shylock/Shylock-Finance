@@ -3,16 +3,23 @@ pragma solidity ^0.8.10;
 
 import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
+import { ShylockComptrollerInterface } from "./interfaces/ShylockComptrollerInterface.sol";
 
-/* This contract is a variation of Openzeppelin Governor contract */
+/* This contract is based on Openzeppelin Governor contract */
 /* It reflects exact vote rights based on the USD value of CTokens */
 /* The execution part will be at ShylockGovernance.sol, which inherits this contract */
 
 abstract contract ShylockGovernanceVote is GovernorCountingSimple {
     error NotImplemented();
 
-    constructor (string memory name) Governor(name) {}
-    
+    address public comptroller;
+    // 100 ETH initially, but can be changed by DAO
+    uint256 _quorum = 100 * 1e8;
+
+    constructor (string memory name, address _comptroller) Governor(name) {
+        comptroller = _comptroller;
+    }
+
     function castVoteBySig(
         uint256 /* proposalId */,
         uint8 /* support */,
@@ -44,8 +51,8 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
         return uint48(block.number);
     }
 
-    function quorum(uint256 timepoint) public view override returns (uint256) {
-        return 0;
+    function quorum(uint256 /* timepoint */) public view override returns (uint256) {
+        return _quorum;
     }
 
     function votingDelay() public view override returns (uint256) {
@@ -53,15 +60,24 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
     }
 
     function votingPeriod() public view override returns (uint256) {
-        return 1 days;  // 14 days in production
+        return 21 days;  // 14 days in production
     }
 
-    // @TODO implement this function
+    /** Function to get the votes of an account at a certain timepoint
+     * @param account The address of the account
+     * @return The votes of the account in the form of oracle price (CToken/ETH)
+     */ 
     function _getVotes(
         address account,
-        uint256 timepoint,
-        bytes memory params
+        uint256 /* timepoint */,
+        bytes memory /* params */
     ) internal view override returns (uint256) {
-        return 0;
+        (uint whatError, uint cTokenBalance) = ShylockComptrollerInterface(comptroller).getAccountAllCtokenBalance(account);
+        // Error.PRICE_ERROR is 13 in ErrorReporter.sol
+        // @TODO import ErrorReporter and change it to Error.PRICE_ERROR
+        if (whatError != 13) {
+            return 0;
+        }
+        return cTokenBalance;
     }
 }
