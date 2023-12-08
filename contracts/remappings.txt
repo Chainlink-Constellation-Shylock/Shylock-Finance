@@ -1,1 +1,2 @@
 @chainlink=node_modules/@chainlink
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts
