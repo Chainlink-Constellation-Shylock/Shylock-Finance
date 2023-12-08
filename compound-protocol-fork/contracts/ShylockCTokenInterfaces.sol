@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 contract ShylockCTokenStorage {
     mapping (address => uint) public underlyingReserves;
-    
+    mapping (address => uint) public underlyingGuarantee;    
 }
 
 abstract contract ShylockCTokenInterface is ShylockCTokenStorage {
