@@ -162,17 +162,17 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         // 0 - 25 points = Tier D (1)
         // 26 - 50 points = Tier C (2) 
         // ...etc
-        uint userPointTier = memberPoints.mulDiv(numberOfTiers, 100, Rounding.Ceil);
+        uint userPointTier = memberPoints.mulDiv(numberOfTiers, 100, Math.Rounding.Ceil);
 
         // If tierThreshold == 2, only Tier A and B can get the cap
         if (userPointTier > tierThreshold) {
             uint memberReputation = memberInfos[member].memberReputation;
-            uint userReputationTier = memberReputation.mulDiv(numberOfTiers, 100, Rounding.Ceil);
+            uint userReputationTier = memberReputation.mulDiv(numberOfTiers, 100, Math.Rounding.Ceil);
             uint memberCap =
                 daoPointCap.mulDiv(userPointTier, numberOfTiers * 10) +
                 daoReputationCap.mulDiv(userReputationTier, numberOfTiers * 10);
             // @TODO Consider collateral ratio of the member
-            return memberCap.muldiv(MANTISSA, calculateMemberCollateralRate(dao, member));
+            return memberCap.mulDiv(MANTISSA, calculateMemberCollateralRate(dao, member));
         } else {
             return 0;
         }  
@@ -230,8 +230,6 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         daoInfo.numberOfTiers = numberOfTiers;
         daoInfo.daoCap = daoCap;
         daoInfo.reputation = initialReputation;
-        // Initial Reputation cap is 20% of the DAO cap
-        daoInfo.daoReputationCap = _calculateDaoReputationCap(daoCap, initialReputation);
         
         daoInfo.weights = weights;
         daoInfo.dataOrigins = dataOrigins;
@@ -253,7 +251,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         bool isUp
     ) external onlyComptroller {
         MemberInfo storage memberInfo = memberInfos[member];
-        MemberInfo storage daoInfo = daoInfos[dao];
+        DaoInfo storage daoInfo = daoInfos[dao];
 
         uint memberReputation = memberInfo.memberReputation;
         uint daoReputation = daoInfo.reputation;

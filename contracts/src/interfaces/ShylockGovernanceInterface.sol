@@ -2,13 +2,6 @@
 pragma solidity ^0.8.10;
 
 abstract contract ShylockGovernanceInterface {
-    enum Rounding {
-        Floor, // Toward negative infinity
-        Ceil, // Toward positive infinity
-        Trunc, // Toward zero
-        Expand // Away from zero
-    }
-
     /**
      * @param weights - scale of % - e.g. 96 equals 96%
      * @param dataOrigins - addresses of FunctionsConsumer contract
