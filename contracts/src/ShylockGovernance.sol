@@ -72,7 +72,6 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
     }
 
     /* Internal Functions */
-
     function _getMemberPoints(address dao, address user) internal view returns (uint) {
         string memory daoName = daoNames[dao];
         uint[] memory weights = DaoDataInfos[dao].weights;

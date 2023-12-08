@@ -99,6 +99,7 @@ contract CTokenStorage {
     struct BorrowSnapshot {
         uint principal;
         uint interestIndex;
+        
     }
 
     // Mapping of account addresses to outstanding borrow balances
