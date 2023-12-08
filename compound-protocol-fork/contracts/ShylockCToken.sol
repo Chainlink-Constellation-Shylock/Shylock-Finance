@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import "./CToken.sol";
 import "./ShylockCTokenInterfaces.sol";
+import "./ShylockComptrollerInterface.sol";
 
 /**
  * @title Shylock Finance's CToken Contract
@@ -11,7 +12,7 @@ import "./ShylockCTokenInterfaces.sol";
  */
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
-
+    
     function addDaoReserveInternal(uint reserveAmount) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
@@ -33,7 +34,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         if (allowed != 0) {
             revert addMemberReserveComptrollerRejection(allowed);
         }
-        
+
         uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
 
         underlyingReserves[msg.sender] = add_(underlyingReserves[msg.sender], actualReserveAmount);

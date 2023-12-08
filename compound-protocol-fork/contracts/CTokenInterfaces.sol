@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
-
-import "./ComptrollerInterface.sol";
+import "./ShylockComptrollerInterface.sol";
 import "./InterestRateModel.sol";
 import "./EIP20NonStandardInterface.sol";
 import "./ErrorReporter.sol";
@@ -46,7 +45,7 @@ contract CTokenStorage {
     /**
      * @notice Contract which oversees inter-cToken operations
      */
-    ComptrollerInterface public comptroller;
+    ShylockComptrollerInterface public comptroller;
 
     /**
      * @notice Model which tells what the current interest rate should be
@@ -166,7 +165,7 @@ abstract contract CTokenInterface is CTokenStorage {
     /**
      * @notice Event emitted when comptroller is changed
      */
-    event NewComptroller(ComptrollerInterface oldComptroller, ComptrollerInterface newComptroller);
+    event NewComptroller(ShylockComptrollerInterface oldComptroller, ShylockComptrollerInterface newComptroller);
 
     /**
      * @notice Event emitted when interestRateModel is changed
@@ -224,7 +223,7 @@ abstract contract CTokenInterface is CTokenStorage {
 
     function _setPendingAdmin(address payable newPendingAdmin) virtual external returns (uint);
     function _acceptAdmin() virtual external returns (uint);
-    function _setComptroller(ComptrollerInterface newComptroller) virtual external returns (uint);
+    function _setComptroller(ShylockComptrollerInterface newComptroller) virtual external returns (uint);
     function _setReserveFactor(uint newReserveFactorMantissa) virtual external returns (uint);
     function _reduceReserves(uint reduceAmount) virtual external returns (uint);
     function _setInterestRateModel(InterestRateModel newInterestRateModel) virtual external returns (uint);
