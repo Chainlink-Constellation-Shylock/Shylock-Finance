@@ -16,11 +16,44 @@ import "./ShylockComptrollerStorage.sol";
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
     function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual internal;
     
+    function getAccountGuarantee(address account) public view returns (uint) {
+        return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
+    }
+
+    function getBorrowContractdByIndex(address account, uint index) public returns (borrowContract memory) {
+        // check the borrowContrac[index] is exist
+        if(borrowContracts[account].length <= index){
+            revert BrrowContracNotExist();
+        }
+
+        borrowContract memory borrowContract = borrowContracts[account][index];
+
+        if (borrowContract.principal == 0) {
+            revert BrrowContracNotExist();
+        }
+
+        uint newPrincipal = borrowContract.principal * borrowIndex / borrowContract.interestIndex;
+        uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(borrowContract.dao, account);
+        uint memberGuaranteeCollateral = div_(newPrincipal, memberCollateralRateMantissa);
+        uint totalGuaranteeCollateral = newPrincipal - memberGuaranteeCollateral;
+        uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(borrowContract.dao);
+        uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
+        uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
+        memberGuaranteeCollateral = sub_(newPrincipal, add_(daoGuaranteeCollateral, protocolGuaranteeCollateral));
+
+        borrowContract.principal = newPrincipal;
+        borrowContract.memberCollateral = memberGuaranteeCollateral;
+        borrowContract.daoCollateral = daoGuaranteeCollateral;
+        borrowContract.protocolCollateral = protocolGuaranteeCollateral;
+
+        return borrowContract;
+    }
+
     function addDaoReserveInternal(uint reserveAmount, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
         if (allowed != 0) {
-            revert addDaoReserveComptrollerRejection(allowed);
+            revert AddDaoReserveComptrollerRejection(allowed);
         }
 
         uint actualReserveAmount;
@@ -31,17 +64,18 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             actualReserveAmount = reserveAmount;
         }
 
-        underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
+        shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
+        totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
 
-        emit AddDaoReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
+        emit AddDaoReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
 
     }
 
     function addMemberReserveInternal(address dao, uint reserveAmount, uint64 chainId) internal nonReentrant {
-        /* Fail if Dao not allowed */
+        /* Fail if Member not allowed */
         uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, msg.sender, reserveAmount);
         if (allowed != 0) {
-            revert addMemberReserveComptrollerRejection(allowed);
+            revert AddMemberReserveComptrollerRejection(allowed);
         }
 
         uint actualReserveAmount;
@@ -52,20 +86,21 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             actualReserveAmount = reserveAmount;
         }
 
-        underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
+        shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
+        totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
 
-        emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
+        emit AddMemberReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
     }
 
     function withdrawDaoReserveInternal(uint withdrawTokens, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), msg.sender, withdrawTokens);
         if (allowed != 0) {
-            revert withdrawDaoReserveComptrollerRejection(allowed);
+            revert WithdrawDaoReserveComptrollerRejection(allowed);
         }
 
-        if (underlyingReserve[msg.sender] < withdrawTokens) {
-            revert withdrawDaoReserveInsufficientBalance();
+        if (shylockReserve[msg.sender] < withdrawTokens) {
+            revert WithdrawDaoReserveInsufficientBalance();
         }
         
         if(chainId == 0){
@@ -75,20 +110,21 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
         }
 
-        underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
+        shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
+        totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
 
-        emit WithdrawDaoReserve(msg.sender, withdrawTokens, underlyingReserve[msg.sender]);
+        emit WithdrawDaoReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }
     
     function withdrawMemberReserveInternal(address dao, uint withdrawTokens, uint64 chainId) internal nonReentrant {
-        /* Fail if Dao not allowed */
+        /* Fail if Member not allowed */
         uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, msg.sender, withdrawTokens);
         if (allowed != 0) {
-            revert withdrawMemberReserveComptrollerRejection(allowed);
+            revert WithdrawMemberReserveComptrollerRejection(allowed);
         }
         
-        if (underlyingReserve[msg.sender] < withdrawTokens) {
-            revert withdrawMemberReserveInsufficientBalance();
+        if (shylockReserve[msg.sender] < withdrawTokens) {
+            revert WithdrawMemberReserveInsufficientBalance();
         }
         
         if(chainId==0){
@@ -98,18 +134,19 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
         }
 
-        underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
+        shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
+        totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
 
-        emit WithdrawMemberReserve(msg.sender, withdrawTokens, underlyingReserve[msg.sender]);
+        emit WithdrawMemberReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }
 
-    function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount) internal nonReentrant {
+    function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount, uint64 chainId) internal nonReentrant {
         accrueInterest();
         // borrowFresh emits borrow-specific logs on errors, so we don't need to
-        borrowFresh(dao, payable(msg.sender), dueTimestamp, borrowAmount);
+        borrowFresh(dao, payable(msg.sender), dueTimestamp, borrowAmount, chainId);
     }
 
-    function borrowFresh(address dao, address payable borrower, uint dueTimestamp, uint borrowAmount) internal {
+    function borrowFresh(address dao, address payable borrower, uint dueTimestamp, uint borrowAmount, uint64 chainId) internal {
         /* Fail if borrow not allowed */
         uint allowed = comptroller.borrowAllowed(address(this), dao, borrower, borrowAmount);
         if (allowed != 0) {
@@ -126,52 +163,25 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             revert BorrowCashNotAvailable();
         }
 
-        /*
-         * We calculate the new borrower and total borrow balances, failing on overflow:
-         *  accountBorrowNew = accountBorrow + borrowAmount
-         *  totalBorrowsNew = totalBorrows + borrowAmount
-         */
-        uint accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
-        uint accountBorrowsNew = accountBorrowsPrev + borrowAmount;
-        uint totalBorrowsNew = totalBorrows + borrowAmount;
-
-        /////////////////////////
-        // EFFECTS & INTERACTIONS
-        // (No safe failures beyond this point)
-
-        /*
-         * We write the previously calculated values into storage.
-         *  Note: Avoid token reentrancy attacks by writing increased borrow before external transfer.
-        `*/
-        accountBorrows[borrower].principal = accountBorrowsNew;
-        accountBorrows[borrower].interestIndex = borrowIndex;
-        totalBorrows = totalBorrowsNew;
-
-        uint err;
-        uint memberReserve;
-        uint memberBorrow;
-        (err, memberReserve) = comptroller.getAccountReserve(borrower);
-        if(err != 0) {
-            revert BorrowComptrollerRejection(err);
-        }
-        (err, memberBorrow) = comptroller.getAccountBorrow(borrower);
-        if(err != 0) {
-            revert BorrowComptrollerRejection(err);
-        }
-
+        
         uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
-        uint memberGuaranteeCollateral = div_(memberBorrow, memberCollateralRateMantissa);
-        uint totalGuaranteeCollateral = memberBorrow - memberGuaranteeCollateral;
+        uint memberGuaranteeCollateral = div_(borrowAmount, memberCollateralRateMantissa);
+        uint totalGuaranteeCollateral = borrowAmount - memberGuaranteeCollateral;
         uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(dao);
         uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
         uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
+        uint actualBorrowAmount = memberGuaranteeCollateral + daoGuaranteeCollateral + protocolGuaranteeCollateral;
         
-        underlyingGuarantee[borrower] = add_(underlyingGuarantee[borrower], memberGuaranteeCollateral);
-        underlyingGuarantee[dao] = add_(underlyingGuarantee[dao], daoGuaranteeCollateral);
-        underlyingGuarantee[address(comptroller)] = add_(underlyingGuarantee[address(comptroller)], protocolGuaranteeCollateral);
+        shylockGuarantee[borrower].principal = getAccountGuarantee(borrower) + memberGuaranteeCollateral;
+        shylockGuarantee[borrower].interestIndex = borrowIndex;
+        shylockGuarantee[dao].principal = getAccountGuarantee(dao) + daoGuaranteeCollateral;
+        shylockGuarantee[dao].interestIndex = borrowIndex;
+        shylockGuarantee[address(comptroller)].principal = getAccountGuarantee(address(comptroller)) + protocolGuaranteeCollateral;
+        shylockGuarantee[address(comptroller)].interestIndex = borrowIndex;
 
         borrowContracts[borrower].push(borrowContract({
-            principal: borrowAmount,
+            dao : dao,
+            principal: actualBorrowAmount,
             memberCollateral: memberGuaranteeCollateral,
             daoCollateral: daoGuaranteeCollateral,
             protocolCollateral: protocolGuaranteeCollateral,
@@ -180,16 +190,96 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             dueTimestamp: dueTimestamp
         }));
 
-        /*
-         * We invoke doTransferOut for the borrower and the borrowAmount.
-         *  Note: The cToken must handle variations between ERC-20 and ETH underlying.
-         *  On success, the cToken borrowAmount less of cash.
-         *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
-         */
-        doTransferOut(borrower, borrowAmount);
+        uint accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
+
+        accountBorrows[borrower].principal = accountBorrowsPrev + actualBorrowAmount;
+        accountBorrows[borrower].interestIndex = borrowIndex;
+        totalBorrows = totalBorrows + actualBorrowAmount;
+
+
+        if(chainId == 0){
+            doTransferOut(borrower, actualBorrowAmount);
+        }
+        else{
+            doTransferOut_Crosschain(borrower, actualBorrowAmount, chainId);
+        }
 
         /* We emit a Borrow event */
-        emit Borrow(borrower, borrowAmount, accountBorrowsNew, totalBorrowsNew);
+        emit Borrow(borrower, actualBorrowAmount, accountBorrowsPrev + actualBorrowAmount, totalBorrows + actualBorrowAmount);
+    }
+
+
+    function repayBorrowInternal(address dao, uint repayAmount, uint index, uint64 chainId) internal nonReentrant {
+        accrueInterest();
+        // repayBorrowFresh emits repay-borrow-specific logs on errors, so we don't need to
+        repayBorrowFresh(msg.sender, dao, msg.sender, repayAmount, index, chainId);
+    }
+
+    function repayBorrowFresh(address payer, address dao, address borrower, uint repayAmount, uint index, uint64 chainId) internal returns (uint) {
+        /* Fail if repayBorrow not allowed */
+        uint allowed = comptroller.repayBorrowAllowed(address(this), payer, borrower, repayAmount);
+        if (allowed != 0) {
+            revert RepayBorrowComptrollerRejection(allowed);
+        }
+
+        /* Verify market's block number equals current block number */
+        if (accrualBlockNumber != getBlockNumber()) {
+            revert RepayBorrowFreshnessCheck();
+        }
+
+        /* We fetch the amount the borrower owes, with accumulated interest */
+        uint accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
+
+        /* If repayAmount == -1, repayAmount = accountBorrows */
+        uint repayAmountFinal = repayAmount == type(uint).max ? accountBorrowsPrev : repayAmount;
+
+        uint actualRepayAmount;
+        if(chainId == 0){
+            actualRepayAmount = doTransferIn(payer, repayAmountFinal);
+        }
+        else{
+            actualRepayAmount = repayAmountFinal;
+        }
+
+        uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
+        uint memberGuaranteeCollateral = div_(actualRepayAmount, memberCollateralRateMantissa);
+        uint totalGuaranteeCollateral = actualRepayAmount - memberGuaranteeCollateral;
+        uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(dao);
+        uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
+        uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
+        memberGuaranteeCollateral = actualRepayAmount - daoGuaranteeCollateral - protocolGuaranteeCollateral;
+
+        shylockGuarantee[borrower].principal = getAccountGuarantee(borrower) - memberGuaranteeCollateral;
+        shylockGuarantee[borrower].interestIndex = borrowIndex;
+        shylockGuarantee[dao].principal = getAccountGuarantee(dao) - daoGuaranteeCollateral;
+        shylockGuarantee[dao].interestIndex = borrowIndex;
+        shylockGuarantee[address(comptroller)].principal = getAccountGuarantee(address(comptroller)) - protocolGuaranteeCollateral;
+        shylockGuarantee[address(comptroller)].interestIndex = borrowIndex;
+
+        borrowContract memory nextBorrowContract = getBorrowContractdByIndex(borrower, index);
+
+        borrowContract storage prevBorrowContract = borrowContracts[borrower][index];
+        prevBorrowContract.principal = nextBorrowContract.principal- actualRepayAmount;
+        prevBorrowContract.memberCollateral = nextBorrowContract.memberCollateral - memberGuaranteeCollateral;
+        prevBorrowContract.daoCollateral = nextBorrowContract.daoCollateral - daoGuaranteeCollateral;
+        prevBorrowContract.protocolCollateral = nextBorrowContract.protocolCollateral - protocolGuaranteeCollateral;
+        prevBorrowContract.interestIndex = borrowIndex;
+
+        if(prevBorrowContract.principal == 0 && prevBorrowContract.memberCollateral == 0 && prevBorrowContract.daoCollateral == 0 && prevBorrowContract.protocolCollateral == 0){
+            uint len = borrowContracts[borrower].length;
+            borrowContracts[borrower][index] = borrowContracts[borrower][len - 1];
+            borrowContracts[borrower].pop();
+        }
+
+        /* We write the previously calculated values into storage */
+        accountBorrows[borrower].principal = accountBorrowsPrev - actualRepayAmount;
+        accountBorrows[borrower].interestIndex = borrowIndex;
+        totalBorrows = totalBorrows - actualRepayAmount;
+
+        /* We emit a RepayBorrow event */
+        emit RepayBorrow(payer, borrower, actualRepayAmount, accountBorrowsPrev - actualRepayAmount, totalBorrows - actualRepayAmount);
+
+        return actualRepayAmount;
     }
 
 }

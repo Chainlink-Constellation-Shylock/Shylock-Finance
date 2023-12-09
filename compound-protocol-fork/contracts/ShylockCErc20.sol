@@ -10,6 +10,11 @@ import "./ShylockCToken.sol";
  * @author Shylock Finance
  */
 contract ShylockCErc20 is CErc20, ShylockCToken {
+    function getCashPrior() virtual override(CErc20, CToken) internal view returns (uint) {
+        EIP20Interface token = EIP20Interface(underlying);
+        uint orginalBalance = token.balanceOf(address(this));
+        return orginalBalance - totalShylockReserve;
+    }
 
     function addDaoReserve(uint reserveAmount) external returns (uint) {
         addDaoReserveInternal(reserveAmount, 0);
@@ -46,7 +51,7 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
     }
 
     function borrow(address dao, uint dueTimestamp, uint borrowAmount) external returns (uint) {
-        borrowInternal(dao, dueTimestamp, borrowAmount);
+        borrowInternal(dao, dueTimestamp, borrowAmount, 0);
         return NO_ERROR;
     }
 
@@ -55,7 +60,7 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
         return NO_ERROR;
     }
 
-    function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual internal {
+    function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual override internal {
         // Crosschain Transfer
     }
 }

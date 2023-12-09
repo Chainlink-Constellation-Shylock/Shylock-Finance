@@ -2,7 +2,7 @@
 module.exports = {
   // solc: "solc",                                          // Solc command to run
   solc_args: [                                              // Extra solc args
-    '--allow-paths','contracts,tests/Contracts',
+    '--allow-paths','contracts',
     '--evm-version', 'istanbul'
   ],
   solc_shell_args: {                                        // Args passed to `exec`, see:
@@ -13,7 +13,7 @@ module.exports = {
   extra_build_files: [process.env['EXTRA_BUILD_FILES'] || 'remote/*.json', 'tests/LegacyBuilds/*.json'], // Additional build files to deep merge
   // coverage_dir: "coverage",                              // Directory to place coverage files
   // coverage_ignore: [],                                   // List of files to ignore for coverage
-  contracts: process.env['SADDLE_CONTRACTS'] || "{contracts,contracts/**,tests/Contracts}/*.sol",
+  contracts: process.env['SADDLE_CONTRACTS'] || "contracts/*.sol",
                                                             // Glob to match contract files
   trace: false,                                             // Compile with debug artifacts
   // TODO: Separate contracts for test?

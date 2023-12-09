@@ -129,11 +129,13 @@ contract TokenErrorReporter {
     error SetInterestRateModelOwnerCheck();
     error SetInterestRateModelFreshCheck();
 
-    error addDaoReserveComptrollerRejection(uint256 errorCode);
-    error addMemberReserveComptrollerRejection(uint256 errorCode);
+    error AddDaoReserveComptrollerRejection(uint256 errorCode);
+    error AddMemberReserveComptrollerRejection(uint256 errorCode);
 
-    error withdrawDaoReserveComptrollerRejection(uint256 errorCode);
-    error withdrawDaoReserveInsufficientBalance();
-    error withdrawMemberReserveComptrollerRejection(uint256 errorCode);
-    error withdrawMemberReserveInsufficientBalance();
+    error WithdrawDaoReserveComptrollerRejection(uint256 errorCode);
+    error WithdrawDaoReserveInsufficientBalance();
+    error WithdrawMemberReserveComptrollerRejection(uint256 errorCode);
+    error WithdrawMemberReserveInsufficientBalance();
+    
+    error BrrowContracNotExist();
 }

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./CToken.sol";
+import "./ShylockComptrollerInterface.sol";
 
 interface CompLike {
     function delegate(address delegatee) external;
@@ -25,7 +26,7 @@ contract CErc20 is CToken, CErc20Interface {
      * @param decimals_ ERC-20 decimal precision of this token
      */
     function initialize(address underlying_,
-                        ComptrollerInterface comptroller_,
+                        ShylockComptrollerInterface comptroller_,
                         InterestRateModel interestRateModel_,
                         uint initialExchangeRateMantissa_,
                         string memory name_,
@@ -79,7 +80,7 @@ contract CErc20 is CToken, CErc20Interface {
       * @param borrowAmount The amount of the underlying asset to borrow
       * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
       */
-    function borrow(uint borrowAmount) override external returns (uint) {
+    function borrow(uint borrowAmount) virtual override external returns (uint) {
         borrowInternal(borrowAmount);
         return NO_ERROR;
     }

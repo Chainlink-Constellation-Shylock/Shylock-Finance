@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./CToken.sol";
+import "./ShylockComptrollerInterface.sol";
 
 /**
  * @title Compound's CEther Contract
@@ -19,7 +20,7 @@ contract CEther is CToken {
      * @param decimals_ ERC-20 decimal precision of this token
      * @param admin_ Address of the administrator of this token
      */
-    constructor(ComptrollerInterface comptroller_,
+    constructor(ShylockComptrollerInterface comptroller_,
                 InterestRateModel interestRateModel_,
                 uint initialExchangeRateMantissa_,
                 string memory name_,

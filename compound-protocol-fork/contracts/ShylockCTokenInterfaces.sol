@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 contract ShylockCTokenStorage {
     struct borrowContract {
+        address dao;
         uint principal;
         uint memberCollateral;
         uint daoCollateral;
@@ -13,8 +14,16 @@ contract ShylockCTokenStorage {
     }
     mapping (address => borrowContract[]) public borrowContracts;
 
-    mapping (address => uint) public underlyingReserve;
-    mapping (address => uint) public underlyingGuarantee;    
+    struct guaranteeSnapshot {
+        uint principal;
+        uint interestIndex;
+    }
+
+    mapping (address => uint) public shylockReserve;
+    // mapping (address => uint) public shylockGuarantee;
+    mapping (address => guaranteeSnapshot) public shylockGuarantee;
+
+    uint public totalShylockReserve;
 
 }
 

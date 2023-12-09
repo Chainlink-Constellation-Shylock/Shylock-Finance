@@ -24,7 +24,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         governanceContract = _governanceContract;
     }
 
-    function getAccountAllCtokenBalance(address account) override public view returns (uint, uint) {
+    function getAllAccountCtokenBalance(address account) override public returns (uint, uint) {
         uint totalBalance;
         uint assetBalance;
         uint oraclePriceMantissa;
@@ -42,11 +42,11 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             assetBalance = asset.balanceOfUnderlying(account);
             totalBalance = mul_ScalarTruncateAddUInt(oraclePrice, assetBalance, totalBalance);
         }
-
+        
         return (uint(Error.NO_ERROR), totalBalance);
     }
 
-    function getAccountReserve(address account) override public view returns (uint, uint) {
+    function getAllAccountReserve(address account) override public view returns (uint, uint) {
         uint totalReserve;
         uint assetReserve;
         uint oraclePriceMantissa;
@@ -61,14 +61,14 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
                 return (uint(Error.PRICE_ERROR), 0);
             }
             oraclePrice = Exp({mantissa: oraclePriceMantissa});
-            assetReserve = asset.underlyingReserve(account);
+            assetReserve = asset.shylockReserve(account);
             totalReserve = mul_ScalarTruncateAddUInt(oraclePrice, assetReserve, totalReserve);
         }
 
         return (uint(Error.NO_ERROR), totalReserve);
     }
 
-    function getAccountGuarantee(address account) public view returns (uint, uint) {
+    function getAllAccountGuarantee(address account) public view returns (uint, uint) {
         uint totalGuarantee;
         uint assetGuarantee;
         uint oraclePriceMantissa;
@@ -83,14 +83,14 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
                 return (uint(Error.PRICE_ERROR), 0);
             }
             oraclePrice = Exp({mantissa: oraclePriceMantissa});
-            assetGuarantee = asset.underlyingGuarantee(account);
+            assetGuarantee = asset.getAccountGuarantee(account);
             totalGuarantee = mul_ScalarTruncateAddUInt(oraclePrice, assetGuarantee, totalGuarantee);
         }
 
         return (uint(Error.NO_ERROR), totalGuarantee);
     }
 
-    function getAccountBorrow(address account) override public view returns (uint, uint) {
+    function getAllAccountBorrow(address account) override public view returns (uint, uint) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         uint oErr;
         uint totalBorrow;
@@ -175,7 +175,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         uint err;
         uint daoReserve;
         // uint daoGuarantee;
-        (err, daoReserve) = getAccountReserve(dao);
+        (err, daoReserve) = getAllAccountReserve(dao);
         if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
@@ -242,12 +242,12 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
 
         uint err;
         uint daoReserve;
-        (err, daoReserve) = getAccountReserve(dao);
+        (err, daoReserve) = getAllAccountReserve(dao);
         if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
         uint daoGuarantee;
-        (err, daoGuarantee) = getAccountGuarantee(dao);
+        (err, daoGuarantee) = getAllAccountGuarantee(dao);
         if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
@@ -343,6 +343,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         return uint(Error.NO_ERROR);
     }
 
+
     function getHypotheticalAccountLiquidityInternal(
         address account,
         CToken cTokenModify,
@@ -407,27 +408,30 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         address account,
         CToken cTokenModify,
         uint withdrawTokens,
-        uint borrowAmount) internal view governanceContractInitialized returns (Error, uint, uint) {
+        uint borrowAmount) internal governanceContractInitialized returns (Error, uint, uint) {
 
         uint err;
 
         uint daoReserve;
-        (err, daoReserve) = getAccountReserve(dao); // 5
-        if (err != uint(Error.NO_ERROR)) {
-            return (Error(err), 0, 0);
-        }
         uint daoGuarantee;
-        (err, daoGuarantee) = getAccountGuarantee(dao); // 2
-        if (err != uint(Error.NO_ERROR)) {
-            return (Error(err), 0, 0);
-        }
         uint memberReserve;
-        (err, memberReserve) = getAccountReserve(account); // 20
+        uint memberBorrow;
+        (err, daoReserve) = getAllAccountReserve(dao); // 5
         if (err != uint(Error.NO_ERROR)) {
             return (Error(err), 0, 0);
         }
-        uint memberBorrow;
-        (err, memberBorrow) = getAccountBorrow(account); // 10 + 16
+        
+        (err, daoGuarantee) = getAllAccountGuarantee(dao); // 2
+        if (err != uint(Error.NO_ERROR)) {
+            return (Error(err), 0, 0);
+        }
+        
+        (err, memberReserve) = getAllAccountReserve(account); // 20
+        if (err != uint(Error.NO_ERROR)) {
+            return (Error(err), 0, 0);
+        }
+        
+        (err, memberBorrow) = getAllAccountBorrow(account); // 10
         if (err != uint(Error.NO_ERROR)) {
             return (Error(err), 0, 0);
         }
@@ -436,22 +440,23 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         if (oraclePriceMantissa == 0) {
             return (Error.PRICE_ERROR, 0, 0);
         }
-        Exp memory oraclePrice = Exp({mantissa: oraclePriceMantissa});
         // Calculate effects of interacting with cTokenModify
-        memberBorrow = mul_ScalarTruncateAddUInt(oraclePrice, borrowAmount+withdrawTokens, memberBorrow);
+        memberBorrow = mul_ScalarTruncateAddUInt(Exp({mantissa: oraclePriceMantissa}), borrowAmount+withdrawTokens, memberBorrow); // 10 + 16 = 26
 
-        uint memberCap = governanceContract.getMemberCap(dao, account); // member's cap : 30
-        uint memberCollateralRateMantissa = governanceContract.getMemberCollateralRate(dao, account); // 180%, actually 1.8e18
-        uint protocolToDaoGuaranteeRateMantissa = governanceContract.getProtocolToDaoGuaranteeRate(dao); // if dao : protocol 1 : 2 it is 2e18
+        // uint memberCap = governanceContract.getMemberCap(dao, account); // member's cap : 30
+        // uint memberCollateralRateMantissa = governanceContract.getMemberCollateralRate(dao, account); // 180%, actually 1.8e18
+        // uint protocolToDaoGuaranteeRateMantissa = governanceContract.getProtocolToDaoGuaranteeRate(dao); // if dao : protocol 1 : 2 it is 2e18
+        uint memberCap = 30e18;
+        uint memberCollateralRateMantissa = 18e17;
+        uint protocolToDaoGuaranteeRateMantissa = 2e18;
         uint memberReserveBorrowable = mul_ScalarTruncate(Exp({mantissa: memberCollateralRateMantissa}), memberReserve); // 20 * 180% = 36
-        uint exceedCollateral = sub_(memberReserveBorrowable, memberReserve); // 36 - 20 = 16
+        uint exceedCollateral = memberReserveBorrowable - memberReserve; // 36 - 20 = 16
         if (exceedCollateral > memberCap) {
             exceedCollateral = memberCap;
         }
-        uint daoAvailableCollateral = sub_(daoReserve, daoGuarantee); // 5 - 2 = 3
         uint daoGuaranteeCollateral = div_(exceedCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne}))); // 16 / 3 = 5
-        if (daoGuaranteeCollateral > daoAvailableCollateral) { // 5 > 3
-            daoGuaranteeCollateral = daoAvailableCollateral; // 3
+        if (daoGuaranteeCollateral > daoReserve - daoGuarantee) { // 5 > 3
+            daoGuaranteeCollateral = daoReserve - daoGuarantee; // 3
         }
         // totalGuaranteeCollateral = daoGuranteeCollatera * ( 1 + protocolToDaoGuaranteeRateMantissa)
         uint totalGuaranteeCollateral =   mul_ScalarTruncateAddUInt(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral, daoGuaranteeCollateral); // 3 * ( 1 + 2 ) = 9
@@ -461,7 +466,6 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         } else {
             return (Error.NO_ERROR, 0, memberBorrow - totalGuaranteeCollateral - memberReserve);
         }
-
     }
 
 }
