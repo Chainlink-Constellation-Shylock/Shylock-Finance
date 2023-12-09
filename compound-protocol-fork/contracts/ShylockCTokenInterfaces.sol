@@ -21,5 +21,7 @@ contract ShylockCTokenStorage {
 abstract contract ShylockCTokenInterface is ShylockCTokenStorage {
     event AddDaoReserve(address indexed dao, uint actualReserveAmount, uint newTotalReserveAmount);
     event AddMemberReserve(address indexed member, uint actualReserveAmount, uint newTotalReserveAmount);
+    event WithdrawDaoReserve(address indexed dao, uint actualWithdrawAmount, uint newTotalReserveAmount);
+    event WithdrawMemberReserve(address indexed member, uint actualWithdrawAmount, uint newTotalReserveAmount);
 }
 
