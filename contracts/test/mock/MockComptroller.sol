@@ -9,7 +9,7 @@ contract MockComptroller {
         return result;
     }
 
-    function getAccountAllCtokenBalance(address /* account */) external pure returns (uint, uint) {
+    function getAllAccountCtokenBalance(address /* account */) external pure returns (uint, uint) {
         return (0, 100);
     }
 }
