@@ -4,7 +4,6 @@ pragma solidity ^0.8.10;
 import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
 import { ShylockComptrollerInterface } from "./interfaces/ShylockComptrollerInterface.sol";
-import { ComptrollerErrorReporter } from "./ErrorReporter.sol";
 
 /* This contract is based on Openzeppelin Governor contract */
 /* It reflects exact vote rights based on the USD value of CTokens */
@@ -49,7 +48,7 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
     }
 
     function clock() public view override returns (uint48) {
-        return uint48(block.number);
+        return uint48(block.timestamp);
     }
 
     function quorum(uint256 /* timepoint */) public view override returns (uint256) {
@@ -74,7 +73,7 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
         bytes memory /* params */
     ) internal view override returns (uint256) {
         (uint whatError, uint cTokenBalance) = ShylockComptrollerInterface(comptroller).getAccountAllCtokenBalance(account);
-        if (whatError != ComptrollerErrorReporter.Error.PRICE_ERROR) {
+        if (whatError != 0) {
             return 0;
         }
         return cTokenBalance;

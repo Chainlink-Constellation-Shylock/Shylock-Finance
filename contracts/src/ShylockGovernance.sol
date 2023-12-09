@@ -81,6 +81,12 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         return memberInfos[member].memberReputation;
     }
 
+    function getReputationInterestRate(address member) override external view returns (uint) {
+        uint memberReputation = memberInfos[member].memberReputation;
+        // rate = 15 - memberReputation * 1/10 (5% ~ 15%)
+        return MANTISSA.mulDiv(15, 100) - MANTISSA.mulDiv(memberReputation, 1000);
+    }
+
 
     /* Setter Functions for basic info */
 
@@ -100,7 +106,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
      * @param threshold The tier threshold of the DAO
      * @param numberOfTier The number of tiers of the DAO
      */
-    function setDaoTierNumberAndThreshold(address dao, uint threshold, uint numberOfTier) external onlyOwnerOrGovernance {
+    function setDaoTierThresholdAndNumber(address dao, uint threshold, uint numberOfTier) external onlyOwnerOrGovernance {
         DaoInfo storage daoInfo = daoInfos[dao];
         daoInfo.tierThreshold = threshold;
         daoInfo.numberOfTiers = numberOfTier;
@@ -136,7 +142,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
      * @param dao The address of the DAO
      * @param rate The ratio of the protocol's guarantee to the DAO's guarantee in mantissa scale
      */
-    function setProtocolGuaranteeRate(address dao, uint rate) external onlyOwnerOrGovernance {
+    function setProtocolToDaoGuaranteeRate(address dao, uint rate) external onlyOwnerOrGovernance {
         DaoInfo storage daoInfo = daoInfos[dao];
         daoInfo.protocolToDaoGuaranteeRate = rate;
         daoInfos[dao] = daoInfo;
@@ -173,7 +179,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
             uint memberCap =
                 daoPointCap.mulDiv(userPointTier, numberOfTiers * 10) +
                 daoReputationCap.mulDiv(userReputationTier, numberOfTiers * 10);
-            return memberCap.mulDiv(MANTISSA, memberCollateralRate) - memberCap;
+            return memberCap.mulDiv(memberCollateralRate, MANTISSA * 100) - memberCap;
         } else {
             return 0;
         }
@@ -257,24 +263,27 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         uint daoReputation = daoInfo.reputation;
         // If member pays the loan back, he gets 1 points per 1 ETH
         // If member defaults, he loses 10 points per 1 ETH
+        // @TODO Check Chainlink oracle price unit
         if (isUp) {
-            memberReputation += amountEthValue.mulDiv(5, CHAINLINK_ORACLE_DENOM);
-            daoReputation += amountEthValue.mulDiv(5, CHAINLINK_ORACLE_DENOM);
+            memberReputation += amountEthValue.mulDiv(1, CHAINLINK_ORACLE_DENOM);
+            daoReputation += amountEthValue.mulDiv(1, CHAINLINK_ORACLE_DENOM);
             if (memberReputation > 100) {
                 memberReputation = 100;
             }
         } else {
-            if (memberReputation < amountEthValue.mulDiv(25, CHAINLINK_ORACLE_DENOM)) {
+            if (memberReputation < amountEthValue.mulDiv(10, CHAINLINK_ORACLE_DENOM)) {
                 memberReputation = 0;
             } else {
-                memberReputation -= amountEthValue.mulDiv(25, CHAINLINK_ORACLE_DENOM);
+                memberReputation -= amountEthValue.mulDiv(10, CHAINLINK_ORACLE_DENOM);
             }
-            if (daoReputation < amountEthValue.mulDiv(25, CHAINLINK_ORACLE_DENOM)) {
+            if (daoReputation < amountEthValue.mulDiv(10, CHAINLINK_ORACLE_DENOM)) {
                 daoReputation = 0;
             } else {
-                daoReputation -= amountEthValue.mulDiv(25, CHAINLINK_ORACLE_DENOM);
+                daoReputation -= amountEthValue.mulDiv(10, CHAINLINK_ORACLE_DENOM);
             }            
         }
+        daoInfo.reputation = daoReputation;
+        memberInfo.memberReputation = memberReputation;
     }
 
 
@@ -310,7 +319,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         return memberDaoPoint.mulDiv(3* MANTISSA, 2) + MANTISSA * 100;
     }
 
-    function _calculateReputationCollateralRate(uint memberReputationPoint) internal view returns (uint) {
+    function _calculateReputationCollateralRate(uint memberReputationPoint) internal pure returns (uint) {
         // rate = 1/40 * memberReputationPoint^2 (0% ~ 250%)
         return (memberReputationPoint * memberReputationPoint).mulDiv(MANTISSA, 40);
     }
