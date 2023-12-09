@@ -21,6 +21,11 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
         return NO_ERROR;
     }
 
+    function withdrawDaoReserve(uint withdrawAmount) external returns (uint) {
+        withdrawDaoReserveInternal(withdrawAmount);
+        return NO_ERROR;
+    }
+
     function borrow(uint borrowAmount) override external returns (uint) {
         revert ("ShylockCErc20: Default borrow not allowed");
     }

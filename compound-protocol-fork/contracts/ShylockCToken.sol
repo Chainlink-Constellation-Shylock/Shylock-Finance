@@ -42,7 +42,42 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
 
         emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
+    }
 
+    function withdrawDaoReserveInternal(uint withdrawTokens) internal nonReentrant {
+        /* Fail if Dao not allowed */
+        uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), msg.sender, withdrawTokens);
+        if (allowed != 0) {
+            revert withdrawDaoReserveComptrollerRejection(allowed);
+        }
+
+        if (underlyingReserve[msg.sender] < withdrawTokens) {
+            revert withdrawDaoReserveInsufficientBalance();
+        }
+        
+        doTransferOut(payable(msg.sender), withdrawTokens);
+
+        underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
+
+        emit WithdrawDaoReserve(msg.sender, withdrawTokens, underlyingReserve[msg.sender]);
+    }
+    
+    function withdrawMemberReserveInternal(address dao, uint withdrawTokens) internal nonReentrant {
+        /* Fail if Dao not allowed */
+        uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, msg.sender, withdrawTokens);
+        if (allowed != 0) {
+            revert withdrawMemberReserveComptrollerRejection(allowed);
+        }
+        
+        if (underlyingReserve[msg.sender] < withdrawTokens) {
+            revert withdrawMemberReserveInsufficientBalance();
+        }
+        
+        doTransferOut(payable(msg.sender), withdrawTokens);
+
+        underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
+
+        emit WithdrawMemberReserve(msg.sender, withdrawTokens, underlyingReserve[msg.sender]);
     }
 
     function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount) internal nonReentrant {
@@ -111,9 +146,6 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         underlyingGuarantee[borrower] = add_(underlyingGuarantee[borrower], memberGuaranteeCollateral);
         underlyingGuarantee[dao] = add_(underlyingGuarantee[dao], daoGuaranteeCollateral);
         underlyingGuarantee[address(comptroller)] = add_(underlyingGuarantee[address(comptroller)], protocolGuaranteeCollateral);
-
-        underlyingReserve[borrower] = sub_(underlyingReserve[borrower], memberGuaranteeCollateral);
-        underlyingReserve[dao] = sub_(underlyingReserve[dao], daoGuaranteeCollateral);
 
         borrowContracts[borrower].push(borrowContract({
             principal: borrowAmount,

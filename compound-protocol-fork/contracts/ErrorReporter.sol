@@ -83,9 +83,6 @@ contract TokenErrorReporter {
     error TransferNotEnough();
     error TransferTooMuch();
 
-    error addDaoReserveComptrollerRejection(uint256 errorCode);
-    error addMemberReserveComptrollerRejection(uint256 errorCode);
-
     error MintComptrollerRejection(uint256 errorCode);
     error MintFreshnessCheck();
 
@@ -131,4 +128,12 @@ contract TokenErrorReporter {
 
     error SetInterestRateModelOwnerCheck();
     error SetInterestRateModelFreshCheck();
+
+    error addDaoReserveComptrollerRejection(uint256 errorCode);
+    error addMemberReserveComptrollerRejection(uint256 errorCode);
+
+    error withdrawDaoReserveComptrollerRejection(uint256 errorCode);
+    error withdrawDaoReserveInsufficientBalance();
+    error withdrawMemberReserveComptrollerRejection(uint256 errorCode);
+    error withdrawMemberReserveInsufficientBalance();
 }
