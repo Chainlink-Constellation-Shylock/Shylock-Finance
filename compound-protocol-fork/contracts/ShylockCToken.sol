@@ -15,6 +15,7 @@ import "./ShylockComptrollerStorage.sol";
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
     function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual internal;
+    
     function addDaoReserveInternal(uint reserveAmount, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
