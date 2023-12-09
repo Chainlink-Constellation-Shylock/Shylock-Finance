@@ -9,15 +9,21 @@ import {IERC20} from "@chainlink/contracts-ccip/vendor/openzeppelin-solidity/v4.
 import {CCIPMessageManager} from "./CCIPMessageManager.sol";
 
 contract CTokenPool is CCIPMessageManager {
-    uint64 sepoliaChainSelector = 16015286601757825753;
+    uint64 destinationChain;
+    IERC20 immutable public token;
+    address immutable public cTokenAddress;
 
-    mapping(address => mapping(address => uint256)) public deposits;   // Depsitor Address => Deposited Token Address ==> amount
-    mapping(address => mapping(address => uint256)) public borrowings; // Depsitor Address => Borrowed Token Address ==> amount
+    mapping(address => uint256) public deposits;   // Depsitor Address => amount
+    mapping(address => uint256) public borrowings; // Borrower Address => amount
 
-    event Deposited(address indexed user, address indexed token, uint256 amount);
-    event Withdrawed(address indexed user, address indexed token, uint256 amount);
+    // event Deposited(address indexed user, address indexed token, uint256 amount);
+    // event Withdrawed(address indexed user, address indexed token, uint256 amount);
 
-    constructor(address _router, address link) CCIPMessageManager(_router, link) {}
+    constructor(address _router, address link, address tokenAddress, address destinationAddress, uint64 destinationChainSelector) CCIPMessageManager(_router, link) {
+        token = IERC20(tokenAddress);
+        cTokenAddress = destinationAddress;
+        destinationChain = destinationChainSelector;
+    }
 
     function _ccipReceive(
         Client.Any2EVMMessage memory message
@@ -28,16 +34,10 @@ contract CTokenPool is CCIPMessageManager {
         // Get the message data.
         bytes memory data = message.data;
 
-        // // Get the message token.
-        // address token = data.tokenAmounts[0].token;
-        // uint256 amount = data.tokenAmounts[0].amount;
-
         // Store the message details.
         messageDetail[messageId] = MessageIn({
             sourceChainSelector: message.sourceChainSelector,
             sender: sender,
-            // token: token,
-            // amount: amount,
             data: data
         });
 
@@ -48,22 +48,21 @@ contract CTokenPool is CCIPMessageManager {
 
         (
             bytes32 functionSelector,
-            bytes32 arg1,
-            bytes32 arg2,
-            bytes32 arg3
+            bytes32 data2,
+            bytes32 data3,
+            bytes32 data4
         ) = decodePayload(data);
 
         if (functionSelector == stringToBytes32("Lend")) {
-            address tokenAddress = address(uint160(uint256(arg1)));
-            uint256 amount = uint256(arg2);
-            address toAddress = address(uint160(uint256(arg3)));
+            uint256 amount = uint256(data2);
+            address toAddress = address(uint160(uint256(data3)));
 
-            lend(tokenAddress, toAddress, amount);
-        } else if (functionSelector == stringToBytes32("Withdraw")) {
-            address tokenAddress = address(uint160(uint256(arg1)));
-            uint256 amount = uint256(arg2);
+            lend(toAddress, amount);
+        } else if (functionSelector == stringToBytes32("TransferOut")) {
+            uint256 amount = uint256(data2);
+            address toAddress = address(uint160(uint256(data3)));
 
-            withdraw(tokenAddress, amount);
+            TransferOut(amount, fromAddress, toAddress);
         } else {
             revert("Invalid function selector");
         }
@@ -72,11 +71,11 @@ contract CTokenPool is CCIPMessageManager {
     function sendMessage(
         address receiverAddress,
         bytes32 functionSelector,
-        bytes32 arg1,
-        bytes32 arg2
+        bytes32 data2,
+        bytes32 data3
     ) internal returns (bytes32 messageId) {
-        bytes32 senderAddress = bytes32(uint256(uint160(msg.sender)));
-        bytes memory data = abi.encode(functionSelector, senderAddress, arg1, arg2);
+        bytes32 senderAddress = addressToBytes32(address(this));
+        bytes memory data = abi.encode(functionSelector, senderAddress, data2, data3);
 
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
             receiver: abi.encode(receiverAddress), // ABI-encoded receiver contract address
@@ -92,13 +91,13 @@ contract CTokenPool is CCIPMessageManager {
         IRouterClient router = IRouterClient(this.getRouter());
 
         // Get the fee required to send the message. Fee paid in LINK.
-        uint256 fees = router.getFee(sepoliaChainSelector, evm2AnyMessage);
+        uint256 fees = router.getFee(destinationChain, evm2AnyMessage);
 
         // Approve the Router to pay fees in LINK tokens on contract's behalf.
         linkToken.approve(address(router), fees);
 
         // Send the message through the router and store the returned message ID
-        messageId = router.ccipSend(sepoliaChainSelector, evm2AnyMessage);
+        messageId = router.ccipSend(destinationChain, evm2AnyMessage);
 
         // TODO: Emit an event with message details
 
@@ -106,39 +105,48 @@ contract CTokenPool is CCIPMessageManager {
         return messageId;
     }
 
-    function deposit(address receiverAddress, address tokenAddress, uint256 amount) public {
-        IERC20 token = IERC20(tokenAddress);
-
+    function addDaoReserve(uint256 amount) external payable {
         require(amount > 0, "Amount must be greater than 0");
         require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
-        deposits[msg.sender][tokenAddress] += amount;
-        emit Deposited(msg.sender, tokenAddress, amount);
+        deposits[msg.sender] += amount;
 
-        bytes32 tokenAddressBytes32 = bytes32(uint256(uint160(tokenAddress)));
-        bytes32 amountBytes32 = bytes32(amount);
+        require(sendMessage(cTokenAddress, stringToBytes32("Deposit"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
+    }
 
-        // TODO: sendMessage로 메시지를 comptroller로 보내고, comptroller에서 cToken을 mint
-        require(sendMessage(receiverAddress, stringToBytes32("Deposit"), tokenAddressBytes32, amountBytes32) != 0, "sendMessage Failed");
+    function addMemberReserve(address dao, uint256 amount) external payable {
+        require(amount > 0, "Amount must be greater than 0");
+        require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+
+        deposits[msg.sender] += amount;
+
+        require(sendMessage(cTokenAddress, stringToBytes32("Deposit"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
+    }
+
+    function transferOut(uint256 amount, address fromAddress, address toAddress) public {
+        require(amount > 0, "Amount must be greater than 0");
+        require(deposits[fromAddress] >= amount, "Not enough tokens to redeem");
+
+        deposits[fromAddress] -= amount;
+
+        require(token.transfer(toAddress, amount), "Transfer failed");
     }
     
-    function withdraw(address tokenAddress, uint256 amount) public {
-        IERC20 token = IERC20(tokenAddress);
-
+    function withdraw(uint256 amount) public {
         require(amount > 0, "Amount must be greater than 0");
-        require(deposits[msg.sender][tokenAddress] >= amount, "Not enough tokens to redeem");
+        require(deposits[msg.sender] >= amount, "Not enough tokens to redeem");
 
-        deposits[msg.sender][tokenAddress] -= amount;
+        deposits[msg.sender] -= amount;
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
-        emit Withdrawed(msg.sender, tokenAddress, amount);
+
+        require(sendMessage(cTokenAddress, stringToBytes32("Withdraw"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
     }
 
-    function lend(address tokenAddress, address toAddress, uint256 amount) public {
-        IERC20 token = IERC20(tokenAddress);
+    function lend(address toAddress, uint256 amount) public {
         require(amount > 0, "Amount must be greater than 0");
 
-        borrowings[toAddress][tokenAddress] += amount;
+        borrowings[toAddress] += amount;
 
         require(token.transferFrom(address(this), toAddress, amount), "Transfer failed");
         require(token.balanceOf(address(this)) >= amount, "Not enough tokens available to transfer");
@@ -153,5 +161,9 @@ contract CTokenPool is CCIPMessageManager {
         assembly {
             result := mload(add(source, 32))
         }
+    }
+
+    function addressToBytes32(address source) public pure returns (bytes32 result){
+        return bytes32(uint256(uint160(source)));
     }
 }

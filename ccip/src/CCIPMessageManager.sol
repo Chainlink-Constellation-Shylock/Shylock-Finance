@@ -7,7 +7,7 @@ import {Client} from "@chainlink/contracts-ccip/ccip/libraries/Client.sol";
 import {Withdraw} from "./utils/Withdraw.sol";
 
 
-abstract contract CCIPMessageManager is CCIPReceiver, Withdraw {
+abstract contract CCIPMessageManager is CCIPReceiver {
     error NoMessageReceived();
     error IndexOutOfBound(uint256 providedIndex, uint256 maxIndex);
     error MessageIdNotExist(bytes32 messageId);

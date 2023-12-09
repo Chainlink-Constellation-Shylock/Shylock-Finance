@@ -196,6 +196,8 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             return uint(Error.MARKET_NOT_LISTED);
         }
 
+        /* dao를 매개변수에서 제외하고 멤버 register는 따로 함수를 구현 */
+
         // check member is registered by checking the member's cap
         uint memberCap = governanceContract.getMemberCap(dao, member);
         if (memberCap == 0) {
