@@ -172,8 +172,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
             uint memberCap =
                 daoPointCap.mulDiv(userPointTier, numberOfTiers * 10) +
                 daoReputationCap.mulDiv(userReputationTier, numberOfTiers * 10);
-            // @TODO Consider collateral ratio of the member
-            return memberCap.mulDiv(MANTISSA, calculateMemberCollateralRate(dao, member));
+            return memberCap.mulDiv(MANTISSA, calculateMemberCollateralRate(dao, member)) - memberCap;
         } else {
             return 0;
         }  
@@ -230,6 +229,8 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         daoInfo.tierThreshold = tierThreshold;
         daoInfo.numberOfTiers = numberOfTiers;
         daoInfo.daoCap = daoCap;
+        // The protocol's guarantee is initially same as the DAO's guarantee
+        daoInfo.protocolToDaoGuaranteeRate = MANTISSA;
         daoInfo.reputation = initialReputation;
         
         daoInfo.weights = weights;
