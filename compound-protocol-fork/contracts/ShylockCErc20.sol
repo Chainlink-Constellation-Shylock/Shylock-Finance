@@ -16,15 +16,15 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
         return NO_ERROR;
     }
 
-    function addMemberReserve(uint reserveAmount) external returns (uint) {
-        addMemberReserveInternal(reserveAmount);
+    function addMemberReserve(address dao, uint reserveAmount) external returns (uint) {
+        addMemberReserveInternal(dao, reserveAmount);
         return NO_ERROR;
     }
 
     function borrow(uint borrowAmount) override external returns (uint) {
         revert ("ShylockCErc20: Default borrow not allowed");
     }
-    
+
     function borrow(address dao, uint dueTimestamp, uint borrowAmount) external returns (uint) {
         borrowInternal(dao, dueTimestamp, borrowAmount);
         return NO_ERROR;

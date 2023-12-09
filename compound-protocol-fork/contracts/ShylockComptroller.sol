@@ -19,6 +19,11 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         _;
     }
 
+    function setGovernanceContract(ShylockGovernanceInterface _governanceContract) external {
+        require(msg.sender == admin, "only admin can set governance contract");
+        governanceContract = _governanceContract;
+    }
+
     function getAccountAllCtokenBalance(address account) override public view returns (uint, uint) {
         uint totalBalance;
         uint assetBalance;
@@ -41,12 +46,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         return (uint(Error.NO_ERROR), totalBalance);
     }
 
-    function setGovernanceContract(ShylockGovernanceInterface _governanceContract) external {
-        require(msg.sender == admin, "only admin can set governance contract");
-        governanceContract = _governanceContract;
-    }
-
-    function getAccountReserve(address account) public view returns (Error, uint) {
+    function getAccountReserve(address account) override public view returns (uint, uint) {
         uint totalReserve;
         uint assetReserve;
         uint oraclePriceMantissa;
@@ -58,17 +58,17 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             ShylockCToken asset = assets[i];
             oraclePriceMantissa = oracle.getUnderlyingPrice(asset);
             if (oraclePriceMantissa == 0) {
-                return (Error.PRICE_ERROR, 0);
+                return (uint(Error.PRICE_ERROR), 0);
             }
             oraclePrice = Exp({mantissa: oraclePriceMantissa});
-            assetReserve = asset.underlyingReserves(account);
+            assetReserve = asset.underlyingReserve(account);
             totalReserve = mul_ScalarTruncateAddUInt(oraclePrice, assetReserve, totalReserve);
         }
 
-        return (Error.NO_ERROR, totalReserve);
+        return (uint(Error.NO_ERROR), totalReserve);
     }
 
-    function getAccountGuarantee(address account) public view returns (Error, uint) {
+    function getAccountGuarantee(address account) public view returns (uint, uint) {
         uint totalGuarantee;
         uint assetGuarantee;
         uint oraclePriceMantissa;
@@ -80,14 +80,43 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             ShylockCToken asset = assets[i];
             oraclePriceMantissa = oracle.getUnderlyingPrice(asset);
             if (oraclePriceMantissa == 0) {
-                return (Error.PRICE_ERROR, 0);
+                return (uint(Error.PRICE_ERROR), 0);
             }
             oraclePrice = Exp({mantissa: oraclePriceMantissa});
             assetGuarantee = asset.underlyingGuarantee(account);
             totalGuarantee = mul_ScalarTruncateAddUInt(oraclePrice, assetGuarantee, totalGuarantee);
         }
 
-        return (Error.NO_ERROR, totalGuarantee);
+        return (uint(Error.NO_ERROR), totalGuarantee);
+    }
+
+    function getAccountBorrow(address account) override public view returns (uint, uint) {
+        AccountLiquidityLocalVars memory vars; // Holds all our calculation results
+        uint oErr;
+        uint totalBorrow;
+
+        // For each asset the account is in
+        CToken[] memory assets = accountAssets[account];
+        for (uint i = 0; i < assets.length; i++) {
+            CToken asset = assets[i];
+
+            // Read the balances and exchange rate from the cToken
+            (oErr, , vars.borrowBalance, ) = asset.getAccountSnapshot(account);
+            if (oErr != 0) { // semi-opaque error code, we assume NO_ERROR == 0 is invariant between upgrades
+                return (uint(Error.SNAPSHOT_ERROR), 0);
+            }
+
+            // Get the normalized price of the asset
+            vars.oraclePriceMantissa = oracle.getUnderlyingPrice(asset);
+            if (vars.oraclePriceMantissa == 0) {
+                return (uint(Error.PRICE_ERROR), 0);
+            }
+            vars.oraclePrice = Exp({mantissa: vars.oraclePriceMantissa});
+
+            totalBorrow = mul_ScalarTruncateAddUInt(vars.oraclePrice, vars.borrowBalance, totalBorrow);
+        }
+
+        return (uint(Error.NO_ERROR), totalBorrow);
     }
 
 
@@ -143,15 +172,15 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             return uint(Error.DAO_NOT_REGISTERED);
         }
 
-        Error err;
+        uint err;
         uint daoReserve;
         uint daoGuarantee;
         (err, daoReserve) = getAccountReserve(dao);
-        if (err != Error.NO_ERROR) {
+        if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
         (err, daoGuarantee) = getAccountGuarantee(dao);
-        if (err != Error.NO_ERROR) {
+        if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
 
@@ -162,13 +191,13 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         return uint(Error.NO_ERROR);
     }
 
-    function addMemberReserveAllowed(address cToken, address member, uint reserveAmount) override external governanceContractInitialized returns (uint) {
+    function addMemberReserveAllowed(address cToken, address dao, address member, uint reserveAmount) override external governanceContractInitialized returns (uint) {
         if (!markets[cToken].isListed) {
             return uint(Error.MARKET_NOT_LISTED);
         }
 
         // check member is registered by checking the member's cap
-        uint memberCap = governanceContract.getMemberCap(member);
+        uint memberCap = governanceContract.getMemberCap(dao, member);
         if (memberCap == 0) {
             return uint(Error.NOT_DAO_MEMBER);
         }
@@ -313,51 +342,34 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         uint redeemTokens,
         uint borrowAmount) internal view governanceContractInitialized returns (Error, uint, uint) {
 
-        AccountLiquidityLocalVars memory vars; // Holds all our calculation results
-        uint oErr;
-        Error err;
+        uint err;
 
         uint daoReserve;
-        (err, daoReserve) = getAccountReserve(dao); // 60
-        if (err != Error.NO_ERROR) {
-            return (err, 0, 0);
+        (err, daoReserve) = getAccountReserve(dao); // 3
+        if (err != uint(Error.NO_ERROR)) {
+            return (Error(err), 0, 0);
         }
         uint memberReserve;
         (err, memberReserve) = getAccountReserve(account); // 20
-        if (err != Error.NO_ERROR) {
-            return (err, 0, 0);
+        if (err != uint(Error.NO_ERROR)) {
+            return (Error(err), 0, 0);
         }
-        uint memberCap = governanceContract.getMemberCap(account); // member's cap : 30
-        uint memberCollateralRateMantissa = governanceContract.getMemberCollateralRate(account); // 180%, actually 1.8e18
-        uint protocolToDaoGuaranteeRateMantissa = governanceContract.getProtocolToDaoGuaranteeRate(account); // if dao : protocol 1 : 2 it is 2e18
-        uint memberBorrow; // 10 + 16
-
-        // For each asset the account is in
-        CToken[] memory assets = accountAssets[account];
-        for (uint i = 0; i < assets.length; i++) {
-            CToken asset = assets[i];
-
-            // Read the balances and exchange rate from the cToken
-            (oErr, , vars.borrowBalance, ) = asset.getAccountSnapshot(account);
-            if (oErr != 0) { // semi-opaque error code, we assume NO_ERROR == 0 is invariant between upgrades
-                return (Error.SNAPSHOT_ERROR, 0, 0);
-            }
-
-            // Get the normalized price of the asset
-            vars.oraclePriceMantissa = oracle.getUnderlyingPrice(asset);
-            if (vars.oraclePriceMantissa == 0) {
-                return (Error.PRICE_ERROR, 0, 0);
-            }
-            vars.oraclePrice = Exp({mantissa: vars.oraclePriceMantissa});
-
-            memberBorrow = mul_ScalarTruncateAddUInt(vars.oraclePrice, vars.borrowBalance, memberBorrow);
-
-            // Calculate effects of interacting with cTokenModify
-            if (asset == cTokenModify) {
-                // borrow effect
-                memberBorrow = mul_ScalarTruncateAddUInt(vars.oraclePrice, borrowAmount, memberBorrow);
-            }
+        uint memberBorrow;
+        (err, memberBorrow) = getAccountBorrow(account); // 10 + 16
+        if (err != uint(Error.NO_ERROR)) {
+            return (Error(err), 0, 0);
         }
+        uint memberCap = governanceContract.getMemberCap(dao, account); // member's cap : 30
+        uint memberCollateralRateMantissa = governanceContract.getMemberCollateralRate(dao, account); // 180%, actually 1.8e18
+        uint protocolToDaoGuaranteeRateMantissa = governanceContract.getProtocolToDaoGuaranteeRate(dao); // if dao : protocol 1 : 2 it is 2e18
+        
+        uint oraclePriceMantissa = oracle.getUnderlyingPrice(cTokenModify);
+        if (oraclePriceMantissa == 0) {
+            return (Error.PRICE_ERROR, 0, 0);
+        }
+        Exp memory oraclePrice = Exp({mantissa: oraclePriceMantissa});
+        // Calculate effects of interacting with cTokenModify
+        memberBorrow = mul_ScalarTruncateAddUInt(oraclePrice, borrowAmount, memberBorrow);
 
         uint memberReserveBorrowable = mul_ScalarTruncate(Exp({mantissa: memberCollateralRateMantissa}), memberReserve); // 20 * 180% = 36
         uint exceedCollateral = sub_(memberReserveBorrowable, memberReserve); // 36 - 20 = 16
@@ -365,16 +377,16 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             exceedCollateral = memberCap;
         }
         uint daoGuaranteeCollateral = div_(exceedCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne}))); // 16 / 3 = 5
-        uint guaranteeCollateral = exceedCollateral - daoGuaranteeCollateral; // 16 - 5 = 11
-        if (daoGuaranteeCollateral > daoReserve) {
-            daoGuaranteeCollateral = daoReserve;
+        if (daoGuaranteeCollateral > daoReserve) { // 5 > 3
+            daoGuaranteeCollateral = daoReserve; // 3
         }
-        guaranteeCollateral = guaranteeCollateral + daoGuaranteeCollateral; // 11 + 5 = 16
+        // totalGuaranteeCollateral = daoGuranteeCollatera * ( 1 + protocolToDaoGuaranteeRateMantissa)
+        uint totalGuaranteeCollateral =   mul_ScalarTruncateAddUInt(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral, daoGuaranteeCollateral); // 3 * ( 1 + 2 ) = 9
 
-        if (guaranteeCollateral + memberReserve > memberBorrow){
-            return (Error.NO_ERROR, guaranteeCollateral + memberReserve - memberBorrow, 0);
+        if (totalGuaranteeCollateral + memberReserve > memberBorrow){ // 9 + 20 > 10 + 16
+            return (Error.NO_ERROR, totalGuaranteeCollateral + memberReserve - memberBorrow, 0);
         } else {
-            return (Error.NO_ERROR, 0, memberBorrow - guaranteeCollateral - memberReserve);
+            return (Error.NO_ERROR, 0, memberBorrow - totalGuaranteeCollateral - memberReserve);
         }
 
     }

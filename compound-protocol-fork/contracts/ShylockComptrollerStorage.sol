@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import "./ShylockCToken.sol";
 import "./ShylockGovernanceInterface.sol";
 
-contract ShylockComptrollerStorage {
+abstract contract ShylockComptrollerStorage {
     ShylockGovernanceInterface public governanceContract;
 
     mapping (address => ShylockCToken[]) public accountReserves; 

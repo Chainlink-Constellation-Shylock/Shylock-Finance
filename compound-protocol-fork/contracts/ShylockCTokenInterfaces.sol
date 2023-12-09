@@ -2,8 +2,20 @@
 pragma solidity ^0.8.10;
 
 contract ShylockCTokenStorage {
-    mapping (address => uint) public underlyingReserves;
+    struct borrowContract {
+        uint principal;
+        uint memberCollateral;
+        uint daoCollateral;
+        uint protocolCollateral;
+        uint interestIndex;
+        uint openTimestamp;
+        uint dueTimestamp;
+    }
+    mapping (address => borrowContract[]) public borrowContracts;
+
+    mapping (address => uint) public underlyingReserve;
     mapping (address => uint) public underlyingGuarantee;    
+
 }
 
 abstract contract ShylockCTokenInterface is ShylockCTokenStorage {
