@@ -39,7 +39,7 @@ abstract contract ShylockGovernanceInterface {
 
 
     mapping(address dao => DaoInfo) public daoInfos;
-    mapping(address member => MemberInfo) memberInfos;
+    mapping(address member => MemberInfo) public memberInfos;
 
     error InvalidLength();
     error InvalidWeights();
@@ -50,4 +50,6 @@ abstract contract ShylockGovernanceInterface {
     function getProtocolToDaoGuaranteeRate(address dao) virtual external returns (uint);
     function getMemberCap(address dao, address member) virtual external returns (uint);
     function getMemberCollateralRate(address dao, address member) virtual external returns (uint);
+    function getReputationInterestRate(address member) virtual external view returns (uint);
+
 }

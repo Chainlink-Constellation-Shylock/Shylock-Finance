@@ -14,8 +14,9 @@ import "./ShylockComptrollerStorage.sol";
 
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
-
-    function addDaoReserveInternal(uint reserveAmount,bool isCrosschain) internal nonReentrant {
+    function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual internal;
+    
+    function addDaoReserveInternal(uint reserveAmount, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
         if (allowed != 0) {
@@ -23,7 +24,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         }
 
         uint actualReserveAmount;
-        if(isCrosschain){
+        if(chainId == 0){
             actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
         }
         else{
@@ -36,21 +37,27 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
     }
 
-    function addMemberReserveInternal(address dao, uint reserveAmount) internal nonReentrant {
+    function addMemberReserveInternal(address dao, uint reserveAmount, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, msg.sender, reserveAmount);
         if (allowed != 0) {
             revert addMemberReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        uint actualReserveAmount;
+        if(chainId == 0){
+            actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        }
+        else{
+            actualReserveAmount = reserveAmount;
+        }
 
         underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
 
         emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
     }
 
-    function withdrawDaoReserveInternal(uint withdrawTokens) internal nonReentrant {
+    function withdrawDaoReserveInternal(uint withdrawTokens, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), msg.sender, withdrawTokens);
         if (allowed != 0) {
@@ -61,14 +68,19 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             revert withdrawDaoReserveInsufficientBalance();
         }
         
-        doTransferOut(payable(msg.sender), withdrawTokens);
+        if(chainId == 0){
+            doTransferOut(payable(msg.sender), withdrawTokens);
+        }
+        else{
+            doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
+        }
 
         underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
 
         emit WithdrawDaoReserve(msg.sender, withdrawTokens, underlyingReserve[msg.sender]);
     }
     
-    function withdrawMemberReserveInternal(address dao, uint withdrawTokens) internal nonReentrant {
+    function withdrawMemberReserveInternal(address dao, uint withdrawTokens, uint64 chainId) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, msg.sender, withdrawTokens);
         if (allowed != 0) {
@@ -79,7 +91,12 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             revert withdrawMemberReserveInsufficientBalance();
         }
         
-        doTransferOut(payable(msg.sender), withdrawTokens);
+        if(chainId==0){
+            doTransferOut(payable(msg.sender), withdrawTokens);
+        }
+        else{
+            doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
+        }
 
         underlyingReserve[msg.sender] = sub_(underlyingReserve[msg.sender], withdrawTokens);
 

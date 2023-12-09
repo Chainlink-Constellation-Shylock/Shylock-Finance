@@ -9,8 +9,8 @@ import "./ShylockComptrollerInterface.sol";
  * @title Shylock Finance's Comptroller Contract
  * @author Shylock Fincance
  */
+ 
 contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, ShylockComptrollerStorage{
-
     /// @notice Emitted when an account enters a market
     event ReserveEntered(CToken cToken, address account);
 
@@ -225,7 +225,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         return uint(Error.NO_ERROR);
     }
 
-    function withdrawDaoReserveAllowed(address cToken, address dao, uint withdrawTokens) external returns (uint) {
+    function withdrawDaoReserveAllowed(address cToken, address dao, uint withdrawTokens) override external returns (uint) {
         if (!markets[cToken].isListed) {
             return uint(Error.MARKET_NOT_LISTED);
         }
@@ -253,11 +253,11 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         }
         uint daoAvailableReserve = sub_(daoReserve, daoGuarantee);
 
-        uint oraclePriceMantissa = oracle.getUnderlyingPrice(cToken);
+        uint oraclePriceMantissa = oracle.getUnderlyingPrice(ShylockCToken(cToken));
         if (oraclePriceMantissa == 0) {
-            return (uint(Error.PRICE_ERROR), 0);
+            return (uint(Error.PRICE_ERROR));
         }
-        uint oraclePrice = Exp({mantissa: oraclePriceMantissa});
+        Exp memory oraclePrice = Exp({mantissa: oraclePriceMantissa});
         uint withdrawAmount = mul_ScalarTruncate(oraclePrice, withdrawTokens);
 
         if (daoAvailableReserve < withdrawAmount) {
@@ -267,7 +267,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         return uint(Error.NO_ERROR);
     }
 
-    function withdrawoMemberReserveAllowed(address cToken, address dao, address member, uint withdrawTokens) external returns (uint) {
+    function withdrawMemberReserveAllowed(address cToken, address dao, address member, uint withdrawTokens) override external returns (uint) {
         if (!markets[cToken].isListed) {
             return uint(Error.MARKET_NOT_LISTED);
         }
@@ -316,7 +316,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         // check the member is dao member by checking the member's cap
         uint memberCap = governanceContract.getMemberCap(dao, borrower);
         if (memberCap == 0) {
-            return uint(Error.MEMBER_NOT_DAOMEMBER);
+            return uint(Error.NOT_DAO_MEMBER);
         }
 
         uint borrowCap = borrowCaps[cToken];
