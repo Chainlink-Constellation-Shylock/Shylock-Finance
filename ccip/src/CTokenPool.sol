@@ -9,11 +9,11 @@ import {IERC20} from "@chainlink/contracts-ccip/vendor/openzeppelin-solidity/v4.
 import {CCIPMessageManager} from "./CCIPMessageManager.sol";
 
 contract CTokenPool is CCIPMessageManager {
-    mapping(address => mapping(address => uint256)) public deposits; // Depsitor Address => Deposited Token Address ==> amount
+    mapping(address => mapping(address => uint256)) public deposits;   // Depsitor Address => Deposited Token Address ==> amount
     mapping(address => mapping(address => uint256)) public borrowings; // Depsitor Address => Borrowed Token Address ==> amount
 
     event Deposited(address indexed user, address indexed token, uint256 amount);
-    event Redeemed(address indexed user, address indexed token, uint256 amount);
+    event Withdrawed(address indexed user, address indexed token, uint256 amount);
 
     constructor(address _router, address link) CCIPMessageManager(_router, link) {}
 
@@ -57,11 +57,11 @@ contract CTokenPool is CCIPMessageManager {
             address toAddress = address(uint160(uint256(arg3)));
 
             lend(tokenAddress, toAddress, amount);
-        } else if (functionSelector == keccak256("Redeem")) {
+        } else if (functionSelector == keccak256("Withdraw")) {
             address tokenAddress = address(uint160(uint256(arg1)));
             uint256 amount = uint256(arg2);
 
-            redeem(tokenAddress, amount);
+            withdraw(tokenAddress, amount);
         } else {
             revert("Invalid function selector");
         }
@@ -117,7 +117,7 @@ contract CTokenPool is CCIPMessageManager {
         // TODO: sendMessage로 메시지를 comptroller로 보내고, comptroller에서 cToken을 mint
     }
     
-    function redeem(address tokenAddress, uint256 amount) public {
+    function withdraw(address tokenAddress, uint256 amount) public {
         IERC20 token = IERC20(tokenAddress);
 
         require(amount > 0, "Amount must be greater than 0");
@@ -126,7 +126,7 @@ contract CTokenPool is CCIPMessageManager {
         deposits[msg.sender][tokenAddress] -= amount;
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
-        emit Redeemed(msg.sender, tokenAddress, amount);
+        emit Withdrawed(msg.sender, tokenAddress, amount);
     }
 
     function lend(address tokenAddress, address toAddress, uint256 amount) public {
