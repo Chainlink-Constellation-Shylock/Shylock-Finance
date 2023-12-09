@@ -25,7 +25,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
      * @return The addresses of the DAO's data origins
      * @return The weights of the DAO's data origins
      */
-    function getDaoDataInfo(address dao) external view returns (uint[] memory, address[] memory) {
+    function getDaoDataOrigin(address dao) external view returns (uint[] memory, address[] memory) {
         return (daoInfos[dao].weights, daoInfos[dao].dataOrigins);
     }
 
@@ -37,7 +37,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         return daoInfos[dao].daoCap;
     }
 
-    /** Function to get the protocol to DAO guarantee rate
+    /** Function to get the protocol to DAO guarantee rate (mantissa scale)
      * @dev The ratio of the protocol's guarantee to the DAO's guarantee in mantissa scale
      * @param dao The address of the DAO
      * @return The ratio of the protocol's guarantee to the DAO's guarantee in mantissa scale
@@ -61,8 +61,8 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
      * @param member The address of the member
      * @return The collateral rate of the member
      */
-    function getMemberCollateralRate(address dao, address member) override view external returns (uint) {
-        return memberCollateralRate[dao][member];
+    function getMemberCollateralRate(address dao, address member) override external returns (uint) {
+        return calculateMemberCollateralRate(dao, member);
     }
 
     /** Function to get the DAO's reputation
@@ -159,8 +159,9 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         uint tierThreshold = daoInfos[dao].tierThreshold;
 
         uint memberPoints = _getMemberPoints(dao, member);
-        // 0 - 25 points = Tier D (1)
-        // 26 - 50 points = Tier C (2) 
+        // if numberOfTiers is 4,
+        // 0 - 25 points => Tier D (1)
+        // 26 - 50 points => Tier C (2) 
         // ...etc
         uint userPointTier = memberPoints.mulDiv(numberOfTiers, 100, Math.Rounding.Ceil);
 
@@ -190,7 +191,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         uint daoCollateralRate = _calculateDaoMemberCollateralRate(memberDaoPoint);
         uint reputationCollateralRate = _calculateReputationCollateralRate(memberReputationPoint);
 
-        return MANTISSA;
+        return daoCollateralRate + reputationCollateralRate;
     }
 
     /** Function to change the member's cap
@@ -302,14 +303,15 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         return points;
     }
 
-    function _calculateDaoMemberCollateralRate(uint memberDaoPoint) internal returns (uint) {
-        // @TODO calculate the collateral rate based on dao point
-        return MANTISSA;
+    function _calculateDaoMemberCollateralRate(uint memberDaoPoint) internal pure returns (uint) {        
+        // rate = 3/2 * memberDaoPoint + 100 (100% ~ 250%)
+        return memberDaoPoint.mulDiv(3* MANTISSA, 2) + MANTISSA.tryMul(100);
     }
 
-    function _calculateReputationCollateralRate(uint memberReputationPoint) internal returns (uint) {
-        // @TODO calculate the collateral rate based on reputation point
-        return MANTISSA;
+    function _calculateReputationCollateralRate(uint memberReputationPoint) internal view returns (uint) {
+        // rate = 1/40 * memberReputationPoint^2 (0% ~ 250%)
+        uint memReputationSquare = memberReputationPoint.tryMul(memberReputationPoint);
+        return memReputationSquare.mulDiv(MANTISSA, 40);
     }
 
     function _calculateDaoReputationCap(uint daoCap, uint reputation) internal returns (uint) {
