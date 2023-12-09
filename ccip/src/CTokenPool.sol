@@ -9,6 +9,8 @@ import {IERC20} from "@chainlink/contracts-ccip/vendor/openzeppelin-solidity/v4.
 import {CCIPMessageManager} from "./CCIPMessageManager.sol";
 
 contract CTokenPool is CCIPMessageManager {
+    uint64 sepoliaChainSelector = 16015286601757825753;
+
     mapping(address => mapping(address => uint256)) public deposits;   // Depsitor Address => Deposited Token Address ==> amount
     mapping(address => mapping(address => uint256)) public borrowings; // Depsitor Address => Borrowed Token Address ==> amount
 
@@ -51,13 +53,13 @@ contract CTokenPool is CCIPMessageManager {
             bytes32 arg3
         ) = decodePayload(data);
 
-        if (functionSelector == keccak256("Lend")) {
+        if (functionSelector == stringToBytes32("Lend")) {
             address tokenAddress = address(uint160(uint256(arg1)));
             uint256 amount = uint256(arg2);
             address toAddress = address(uint160(uint256(arg3)));
 
             lend(tokenAddress, toAddress, amount);
-        } else if (functionSelector == keccak256("Withdraw")) {
+        } else if (functionSelector == stringToBytes32("Withdraw")) {
             address tokenAddress = address(uint160(uint256(arg1)));
             uint256 amount = uint256(arg2);
 
@@ -68,12 +70,11 @@ contract CTokenPool is CCIPMessageManager {
     }
 
     function sendMessage(
-        uint64 destinationChainSelector,
         address receiverAddress,
         bytes32 functionSelector,
         bytes32 arg1,
         bytes32 arg2
-    ) external returns (bytes32 messageId) {
+    ) internal returns (bytes32 messageId) {
         bytes32 senderAddress = bytes32(uint256(uint160(msg.sender)));
         bytes memory data = abi.encode(functionSelector, senderAddress, arg1, arg2);
 
@@ -91,13 +92,13 @@ contract CTokenPool is CCIPMessageManager {
         IRouterClient router = IRouterClient(this.getRouter());
 
         // Get the fee required to send the message. Fee paid in LINK.
-        uint256 fees = router.getFee(destinationChainSelector, evm2AnyMessage);
+        uint256 fees = router.getFee(sepoliaChainSelector, evm2AnyMessage);
 
         // Approve the Router to pay fees in LINK tokens on contract's behalf.
         linkToken.approve(address(router), fees);
 
         // Send the message through the router and store the returned message ID
-        messageId = router.ccipSend(destinationChainSelector, evm2AnyMessage);
+        messageId = router.ccipSend(sepoliaChainSelector, evm2AnyMessage);
 
         // TODO: Emit an event with message details
 
@@ -105,7 +106,7 @@ contract CTokenPool is CCIPMessageManager {
         return messageId;
     }
 
-    function deposit(address tokenAddress, uint256 amount) public {
+    function deposit(address receiverAddress, address tokenAddress, uint256 amount) public {
         IERC20 token = IERC20(tokenAddress);
 
         require(amount > 0, "Amount must be greater than 0");
@@ -114,7 +115,11 @@ contract CTokenPool is CCIPMessageManager {
         deposits[msg.sender][tokenAddress] += amount;
         emit Deposited(msg.sender, tokenAddress, amount);
 
+        bytes32 tokenAddressBytes32 = bytes32(uint256(uint160(tokenAddress)));
+        bytes32 amountBytes32 = bytes32(amount);
+
         // TODO: sendMessage로 메시지를 comptroller로 보내고, comptroller에서 cToken을 mint
+        require(sendMessage(receiverAddress, stringToBytes32("Deposit"), tokenAddressBytes32, amountBytes32) != 0, "sendMessage Failed");
     }
     
     function withdraw(address tokenAddress, uint256 amount) public {
@@ -137,5 +142,16 @@ contract CTokenPool is CCIPMessageManager {
 
         require(token.transferFrom(address(this), toAddress, amount), "Transfer failed");
         require(token.balanceOf(address(this)) >= amount, "Not enough tokens available to transfer");
+    }
+
+    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            result := mload(add(source, 32))
+        }
     }
 }
