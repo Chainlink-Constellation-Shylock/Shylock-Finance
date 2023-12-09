@@ -164,6 +164,7 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         // 26 - 50 points => Tier C (2) 
         // ...etc
         uint userPointTier = memberPoints.mulDiv(numberOfTiers, 100, Math.Rounding.Ceil);
+        uint memberCollateralRate = calculateMemberCollateralRate(dao, member);
 
         // If tierThreshold == 2, only Tier A and B can get the cap
         if (userPointTier > tierThreshold) {
@@ -172,10 +173,10 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
             uint memberCap =
                 daoPointCap.mulDiv(userPointTier, numberOfTiers * 10) +
                 daoReputationCap.mulDiv(userReputationTier, numberOfTiers * 10);
-            return memberCap.mulDiv(MANTISSA, calculateMemberCollateralRate(dao, member)) - memberCap;
+            return memberCap.mulDiv(MANTISSA, memberCollateralRate) - memberCap;
         } else {
             return 0;
-        }  
+        }
     }
 
     /** Function to set the member's collateral ratio (100% - 500%) in mantissa scale
@@ -184,11 +185,8 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
      * @param member The address of the member
      */
     function calculateMemberCollateralRate(address dao, address member) public returns (uint) {
-        uint memberDaoPoint = _getMemberPoints(dao, member);
-        uint memberReputationPoint = memberInfos[member].memberReputation;
-        
-        uint daoCollateralRate = _calculateDaoMemberCollateralRate(memberDaoPoint);
-        uint reputationCollateralRate = _calculateReputationCollateralRate(memberReputationPoint);
+        uint daoCollateralRate = _calculateDaoMemberCollateralRate(_getMemberPoints(dao, member));
+        uint reputationCollateralRate = _calculateReputationCollateralRate(memberInfos[member].memberReputation);
 
         return daoCollateralRate + reputationCollateralRate;
     }
@@ -293,26 +291,28 @@ contract ShylockGovernance is ShylockGovernanceInterface, ShylockGovernanceVote 
         }
         memberInfos[user] = memberInfo;
 
-        string memory daoName = daoInfos[dao].daoName;
-        uint[] memory weights = daoInfos[dao].weights;
-        address[] memory dataOrigins = daoInfos[dao].dataOrigins;
-        uint points = 0;
-        for (uint i = 0; i < weights.length; i++) {
-            uint256 userScore = IFunctionsConsumer(dataOrigins[i]).userScore(daoName, user);
-            points += userScore.mulDiv(weights[i], WEIGHT_DENOM);
+        // To avoid stack too deep
+        {
+            string memory daoName = daoInfos[dao].daoName;
+            uint[] memory weights = daoInfos[dao].weights;
+            address[] memory dataOrigins = daoInfos[dao].dataOrigins;
+            uint points = 0;
+            for (uint i = 0; i < weights.length; i++) {
+                uint256 userScore = IFunctionsConsumer(dataOrigins[i]).userScore(daoName, user);
+                points += userScore.mulDiv(weights[i], WEIGHT_DENOM);
+            }
+            return points;
         }
-        return points;
     }
 
     function _calculateDaoMemberCollateralRate(uint memberDaoPoint) internal pure returns (uint) {        
         // rate = 3/2 * memberDaoPoint + 100 (100% ~ 250%)
-        return memberDaoPoint.mulDiv(3* MANTISSA, 2) + MANTISSA.tryMul(100);
+        return memberDaoPoint.mulDiv(3* MANTISSA, 2) + MANTISSA * 100;
     }
 
     function _calculateReputationCollateralRate(uint memberReputationPoint) internal view returns (uint) {
         // rate = 1/40 * memberReputationPoint^2 (0% ~ 250%)
-        uint memReputationSquare = memberReputationPoint.tryMul(memberReputationPoint);
-        return memReputationSquare.mulDiv(MANTISSA, 40);
+        return (memberReputationPoint * memberReputationPoint).mulDiv(MANTISSA, 40);
     }
 
     function _calculateDaoReputationCap(uint daoCap, uint reputation) internal returns (uint) {
