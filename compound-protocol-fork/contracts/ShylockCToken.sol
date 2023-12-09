@@ -15,14 +15,20 @@ import "./ShylockComptrollerStorage.sol";
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
-    function addDaoReserveInternal(uint reserveAmount) internal nonReentrant {
+    function addDaoReserveInternal(uint reserveAmount,bool isCrosschain) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
         if (allowed != 0) {
             revert addDaoReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        uint actualReserveAmount;
+        if(isCrosschain){
+            actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        }
+        else{
+            actualReserveAmount = reserveAmount;
+        }
 
         underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
 

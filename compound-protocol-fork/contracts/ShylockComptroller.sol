@@ -313,6 +313,11 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
             return uint(Error.PRICE_ERROR);
         }
 
+        // check the member is dao member by checking the member's cap
+        uint memberCap = governanceContract.getMemberCap(dao, borrower);
+        if (memberCap == 0) {
+            return uint(Error.MEMBER_NOT_DAOMEMBER);
+        }
 
         uint borrowCap = borrowCaps[cToken];
         // Borrow cap of 0 corresponds to unlimited borrowing

@@ -12,7 +12,12 @@ import "./ShylockCToken.sol";
 contract ShylockCErc20 is CErc20, ShylockCToken {
 
     function addDaoReserve(uint reserveAmount) external returns (uint) {
-        addDaoReserveInternal(reserveAmount);
+        addDaoReserveInternal(reserveAmount, false);
+        return NO_ERROR;
+    }
+
+    function addDaoReserve_CrossChain(uint reserveAmount) internal returns (uint) {
+        addDaoReserveInternal(reserveAmount, true);
         return NO_ERROR;
     }
 
