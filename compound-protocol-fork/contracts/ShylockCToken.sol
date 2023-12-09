@@ -4,12 +4,14 @@ pragma solidity ^0.8.10;
 import "./CToken.sol";
 import "./ShylockCTokenInterfaces.sol";
 import "./ShylockComptrollerInterface.sol";
+import "./ShylockComptrollerStorage.sol";
 
 /**
  * @title Shylock Finance's CToken Contract
  * @notice Abstract base for CTokens
  * @author Shylock Finance
  */
+
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
@@ -22,24 +24,24 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
         uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
 
-        underlyingReserves[msg.sender] = add_(underlyingReserves[msg.sender], actualReserveAmount);
+        underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
 
-        emit AddDaoReserve(msg.sender, actualReserveAmount, underlyingReserves[msg.sender]);
+        emit AddDaoReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
 
     }
 
-    function addMemberReserveInternal(uint reserveAmount) internal nonReentrant {
+    function addMemberReserveInternal(address dao, uint reserveAmount) internal nonReentrant {
         /* Fail if Dao not allowed */
-        uint allowed = comptroller.addMemberReserveAllowed(address(this), msg.sender, reserveAmount);
+        uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, msg.sender, reserveAmount);
         if (allowed != 0) {
             revert addMemberReserveComptrollerRejection(allowed);
         }
 
         uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
 
-        underlyingReserves[msg.sender] = add_(underlyingReserves[msg.sender], actualReserveAmount);
+        underlyingReserve[msg.sender] = add_(underlyingReserve[msg.sender], actualReserveAmount);
 
-        emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserves[msg.sender]);
+        emit AddMemberReserve(msg.sender, actualReserveAmount, underlyingReserve[msg.sender]);
 
     }
 
@@ -86,6 +88,42 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         accountBorrows[borrower].principal = accountBorrowsNew;
         accountBorrows[borrower].interestIndex = borrowIndex;
         totalBorrows = totalBorrowsNew;
+
+        uint err;
+        uint memberReserve;
+        uint memberBorrow;
+        (err, memberReserve) = comptroller.getAccountReserve(borrower);
+        if(err != 0) {
+            revert BorrowComptrollerRejection(err);
+        }
+        (err, memberBorrow) = comptroller.getAccountBorrow(borrower);
+        if(err != 0) {
+            revert BorrowComptrollerRejection(err);
+        }
+
+        uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
+        uint memberGuaranteeCollateral = div_(memberBorrow, memberCollateralRateMantissa);
+        uint totalGuaranteeCollateral = memberBorrow - memberGuaranteeCollateral;
+        uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(dao);
+        uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
+        uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
+        
+        underlyingGuarantee[borrower] = add_(underlyingGuarantee[borrower], memberGuaranteeCollateral);
+        underlyingGuarantee[dao] = add_(underlyingGuarantee[dao], daoGuaranteeCollateral);
+        underlyingGuarantee[address(comptroller)] = add_(underlyingGuarantee[address(comptroller)], protocolGuaranteeCollateral);
+
+        underlyingReserve[borrower] = sub_(underlyingReserve[borrower], memberGuaranteeCollateral);
+        underlyingReserve[dao] = sub_(underlyingReserve[dao], daoGuaranteeCollateral);
+
+        borrowContracts[borrower].push(borrowContract({
+            principal: borrowAmount,
+            memberCollateral: memberGuaranteeCollateral,
+            daoCollateral: daoGuaranteeCollateral,
+            protocolCollateral: protocolGuaranteeCollateral,
+            interestIndex: borrowIndex,
+            openTimestamp: block.timestamp,
+            dueTimestamp: dueTimestamp
+        }));
 
         /*
          * We invoke doTransferOut for the borrower and the borrowAmount.

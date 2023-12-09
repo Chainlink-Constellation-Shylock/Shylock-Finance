@@ -40,9 +40,6 @@ abstract contract ShylockGovernanceInterface {
 
     mapping(address dao => DaoInfo) public daoInfos;
     mapping(address member => MemberInfo) memberInfos;
-    mapping(address dao => mapping(address member => uint cap)) memberCap;
-    mapping(address dao => mapping(address member => uint rate)) memberCollateralRate;
-
 
     error InvalidLength();
     error InvalidWeights();

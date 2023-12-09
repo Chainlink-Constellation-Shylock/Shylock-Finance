@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import { GovernorCountingSimple } from "@openzeppelin/contracts/governance/extensions/GovernorCountingSimple.sol";
 import { Governor } from "@openzeppelin/contracts/governance/Governor.sol";
 import { ShylockComptrollerInterface } from "./interfaces/ShylockComptrollerInterface.sol";
+import { ComptrollerErrorReporter } from "./ErrorReporter.sol";
 
 /* This contract is based on Openzeppelin Governor contract */
 /* It reflects exact vote rights based on the USD value of CTokens */
@@ -73,9 +74,7 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
         bytes memory /* params */
     ) internal view override returns (uint256) {
         (uint whatError, uint cTokenBalance) = ShylockComptrollerInterface(comptroller).getAccountAllCtokenBalance(account);
-        // Error.PRICE_ERROR is 13 in ErrorReporter.sol
-        // @TODO import ErrorReporter and change it to Error.PRICE_ERROR
-        if (whatError != 13) {
+        if (whatError != ComptrollerErrorReporter.Error.PRICE_ERROR) {
             return 0;
         }
         return cTokenBalance;
