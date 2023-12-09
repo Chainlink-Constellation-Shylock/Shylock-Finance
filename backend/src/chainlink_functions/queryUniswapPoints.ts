@@ -1,12 +1,12 @@
 import fs from "fs";
 import path from "path";
-import { makeSimulation, makeRequestMumbai } from "../utils/makeChainlinkRequest";
+import { makeSimulation, makeRequestFuji } from "../utils/makeChainlinkRequest";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const consumerAddress: string = "0x3c6a554d620b8fcbeb7572b32a5165346be0f1bb";
-const subscriptionId: number = 932;
+const consumerAddress: string = "0xf9Fd56F85047A1d736B9Ee26D82Ae72D20d1F9Ac";
+const subscriptionId: number = 1865;
 
 export async function queryUniswapPoints(username: string) : Promise<bigint | string | undefined> {
   const source: string = fs
@@ -14,6 +14,6 @@ export async function queryUniswapPoints(username: string) : Promise<bigint | st
       .toString();
   const args = [username];
   const res = await makeSimulation(source, args);
-  await makeRequestMumbai(consumerAddress, subscriptionId, source, args);
+  await makeRequestFuji(consumerAddress, subscriptionId, source, args);
   return res;
 }

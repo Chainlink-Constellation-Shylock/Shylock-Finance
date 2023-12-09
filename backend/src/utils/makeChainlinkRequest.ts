@@ -39,16 +39,16 @@ export async function makeSimulation(source: string, args: string[]): Promise<bi
 }
 
 
-export async function makeRequestMumbai(
+export async function makeRequestFuji(
   consumerAddress: string,
   subscriptionId: number,
   source: string,
   args: string[]
 ): Promise<void> {
-  const routerAddress: string = "0x6E2dc0F9DB014aE19888F539E59285D2Ea04244C";
-  const linkTokenAddress: string = "0x326C977E6efc84E512bB9C30f76E30c160eD06FB";
-  const donId: string = "fun-polygon-mumbai-1";
-  const explorerUrl: string = "https://mumbai.polygonscan.com";
+  const routerAddress: string = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0";
+  const linkTokenAddress: string = "0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846";
+  const donId: string = "fun-avalanche-fuji-1";
+  const explorerUrl: string = "https://testnet.avascan.info/";
 
   const gasLimit: number = 300000;
 
@@ -59,7 +59,7 @@ export async function makeRequestMumbai(
     );
   }
 
-  const rpcUrl: string | undefined = process.env.POLYGON_MUMBAI_RPC_URL;
+  const rpcUrl: string | undefined = process.env.AVALANCHE_FUJI_RPC_URL;
   if (!rpcUrl) {
     throw new Error(
       "rpcUrl not provided - check your environment variables"
