@@ -5,7 +5,7 @@ import "./compound/CToken.sol";
 import "./interface/ShylockCTokenInterfaces.sol";
 import "./interface/ShylockComptrollerInterface.sol";
 import "./interface/ShylockComptrollerStorage.sol";
-import "@openzeppelin-upgradeable/contracts/metatx/ERC2771ContextUpgradeable.sol";
+import "./utils/SimpleERC2771Context.sol";
 
 /**
  * @title Shylock Finance's CToken Contract
@@ -14,7 +14,7 @@ import "@openzeppelin-upgradeable/contracts/metatx/ERC2771ContextUpgradeable.sol
  */
 
 
-abstract contract ShylockCToken is CToken, ShylockCTokenInterface, ERC2771ContextUpgradeable {    
+abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771Context {
     function getAccountGuarantee(address account) public view returns (uint) {
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
@@ -245,44 +245,6 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, ERC2771Contex
         emit RepayBorrow(payer, borrower, actualRepayAmount, accountBorrowsPrev - actualRepayAmount, totalBorrows - actualRepayAmount);
 
         return actualRepayAmount;
-    }
-
-    
-    /**
-     * @dev Override for `msg.sender`. Defaults to the original `msg.sender` whenever
-     * a call is not performed by the trusted forwarder or the calldata length is less than
-     * 20 bytes (an address length).
-     */
-    function _msgSender() internal view virtual override returns (address) {
-        uint256 calldataLength = msg.data.length;
-        uint256 contextSuffixLength = _contextSuffixLength();
-        if (isTrustedForwarder(msg.sender) && calldataLength >= contextSuffixLength) {
-            return address(bytes20(msg.data[calldataLength - contextSuffixLength:]));
-        } else {
-            return super._msgSender();
-        }
-    }
-
-    /**
-     * @dev Override for `msg.data`. Defaults to the original `msg.data` whenever
-     * a call is not performed by the trusted forwarder or the calldata length is less than
-     * 20 bytes (an address length).
-     */
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        uint256 calldataLength = msg.data.length;
-        uint256 contextSuffixLength = _contextSuffixLength();
-        if (isTrustedForwarder(msg.sender) && calldataLength >= contextSuffixLength) {
-            return msg.data[:calldataLength - contextSuffixLength];
-        } else {
-            return super._msgData();
-        }
-    }
-
-    /**
-     * @dev ERC-2771 specifies the context as being a single address (20 bytes).
-     */
-    function _contextSuffixLength() internal view virtual returns (uint256) {
-        return 20;
     }
 
 

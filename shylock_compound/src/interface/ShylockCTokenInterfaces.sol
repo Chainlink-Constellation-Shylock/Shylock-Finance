@@ -25,6 +25,8 @@ contract ShylockCTokenStorage {
 
     uint public totalShylockReserve;
 
+    address public ccipGateWay;
+
 }
 
 abstract contract ShylockCTokenInterface is ShylockCTokenStorage {
