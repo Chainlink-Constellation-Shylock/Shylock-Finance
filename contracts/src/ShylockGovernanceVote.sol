@@ -72,7 +72,7 @@ abstract contract ShylockGovernanceVote is GovernorCountingSimple {
         uint256 /* timepoint */,
         bytes memory /* params */
     ) internal view override returns (uint256) {
-        (uint whatError, uint cTokenBalance) = ShylockComptrollerInterface(comptroller).getAccountAllCtokenBalance(account);
+        (uint whatError, uint cTokenBalance) = ShylockComptrollerInterface(comptroller).getAllAccountCtokenBalance(account);
         if (whatError != 0) {
             return 0;
         }
