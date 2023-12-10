@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.20;
 
-import "@openzeppelin/contracts/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "forge-std/Test.sol";
 
 // creates payable addresses
@@ -62,7 +62,7 @@ contract UsersFixtures is Test {
             address payable user = getNextUserAddress();
             vm.deal(user, defaultInitialEthBalance);
             users[i] = user;
-            vm.label(user, string.concat("user", StringsUpgradeable.toString(i)));
+            vm.label(user, string.concat("user", Strings.toString(i)));
         }
     }
 
