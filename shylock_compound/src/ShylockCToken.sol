@@ -39,7 +39,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(borrowContract.dao);
         uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
         uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
-        memberGuaranteeCollateral = sub_(newPrincipal, add_(daoGuaranteeCollateral, protocolGuaranteeCollateral));
+        memberGuaranteeCollateral = newPrincipal - daoGuaranteeCollateral - protocolGuaranteeCollateral;
 
         borrowContract.principal = newPrincipal;
         borrowContract.memberCollateral = memberGuaranteeCollateral;
@@ -64,8 +64,8 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             actualReserveAmount = reserveAmount;
         }
 
-        shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
-        totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
+        shylockReserve[msg.sender] = shylockReserve[msg.sender] + actualReserveAmount;
+        totalShylockReserve = totalShylockReserve + actualReserveAmount;
 
         emit AddDaoReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
 
@@ -86,8 +86,8 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             actualReserveAmount = reserveAmount;
         }
 
-        shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
-        totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
+        shylockReserve[msg.sender] = shylockReserve[msg.sender] + actualReserveAmount;
+        totalShylockReserve = totalShylockReserve + actualReserveAmount;
 
         emit AddMemberReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
     }
@@ -110,8 +110,8 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
         }
 
-        shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
-        totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
+        shylockReserve[msg.sender] = shylockReserve[msg.sender] - withdrawTokens;
+        totalShylockReserve = totalShylockReserve - withdrawTokens;
 
         emit WithdrawDaoReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }
@@ -134,8 +134,8 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
         }
 
-        shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
-        totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
+        shylockReserve[msg.sender] = shylockReserve[msg.sender] - withdrawTokens;
+        totalShylockReserve = totalShylockReserve- withdrawTokens;
 
         emit WithdrawMemberReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }

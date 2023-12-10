@@ -251,7 +251,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         if (err != uint(Error.NO_ERROR)) {
             return uint(err);
         }
-        uint daoAvailableReserve = sub_(daoReserve, daoGuarantee);
+        uint daoAvailableReserve = daoReserve - daoGuarantee;
 
         uint oraclePriceMantissa = oracle.getUnderlyingPrice(ShylockCToken(cToken));
         if (oraclePriceMantissa == 0) {
@@ -323,7 +323,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         // Borrow cap of 0 corresponds to unlimited borrowing
         if (borrowCap != 0) {
             uint totalBorrows = CToken(cToken).totalBorrows();
-            uint nextTotalBorrows = add_(totalBorrows, borrowAmount);
+            uint nextTotalBorrows = totalBorrows + borrowAmount;
             require(nextTotalBorrows < borrowCap, "market borrow cap reached");
         }
 
@@ -334,11 +334,6 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         if (shortfall > 0) {
             return uint(Error.INSUFFICIENT_LIQUIDITY);
         }
-
-        // Keep the flywheel moving
-        Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-        // updateCompBorrowIndex(cToken, borrowIndex);
-        // distributeBorrowerComp(cToken, borrower, borrowIndex);
 
         return uint(Error.NO_ERROR);
     }
