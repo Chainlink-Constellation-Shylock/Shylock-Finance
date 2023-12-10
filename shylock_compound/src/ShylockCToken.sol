@@ -13,7 +13,7 @@ import "./interface/ShylockComptrollerStorage.sol";
  */
 
 
-abstract contract ShylockCToken is CToken, ShylockCTokenInterface {    
+contract ShylockCToken is CToken, ShylockCTokenInterface {    
     function getAccountGuarantee(address account) public view returns (uint) {
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
