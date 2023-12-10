@@ -35,7 +35,7 @@ contract CcipGateway is CCIPReceiver {
     function sendMessage(
         bytes memory data
     ) external returns (bytes32 messageId) {
-        uint64 destinationChainSelector = destinationChainSelector[msg.sender];
+        uint64 destinationChain = destinationChainSelector[msg.sender];
         address receiverContract = tokenPoolAddress[msg.sender];
 
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
@@ -67,8 +67,8 @@ contract CcipGateway is CCIPReceiver {
     }
 
     // TODO: Add onlyOwner modifier
-    function registerToken(address tokenAddress, uint64 _destinationChainSelector, address _tokenPoolAddress) public {
-        destinationChainSelector[tokenAddress] = _destinationChainSelector;
-        tokenPoolAddress[tokenAddress] = _tokenPoolAddress;
+    function registerToken(address _tokenAddress, uint64 _destinationChainSelector, address _tokenPoolAddress) public {
+        destinationChainSelector[_tokenAddress] = _destinationChainSelector;
+        tokenPoolAddress[_tokenAddress] = _tokenPoolAddress;
     }
 }

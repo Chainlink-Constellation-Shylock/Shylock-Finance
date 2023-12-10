@@ -19,10 +19,10 @@ contract CTokenPool {
     // event Deposited(address indexed user, address indexed token, uint256 amount);
     // event Withdrawed(address indexed user, address indexed token, uint256 amount);
 
-    constructor(address _router, address link, address tokenAddress, address destinationAddress, uint64 destinationChainSelector) CCIPMessageManager(_router, link) {
-        destinationChain = destinationChainSelector;
+    constructor(address tokenAddress, address _ccipGateway, uint64 destinationChainSelector) {
         token = IERC20(tokenAddress);
-        cTokenAddress = destinationAddress;
+        ccipGateWay = _ccipGateway;
+        destinationChain = destinationChainSelector;
     }
 
     function doTransferOut(uint256 amount, address fromAddress, address toAddress) public {
@@ -54,7 +54,7 @@ contract CTokenPool {
         bytes4 functionSelector = bytes4(keccak256("addDaoReserve(uint,address)"));
         bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
 
-        require(sendMessage(destinationChain, ccipGateWay, data) != 0, "addDaoReserve message sending Failed");
+        ccipGateWay.call(data);
     }
 
     function addMemberReserve(address dao, uint256 amount) external payable {
@@ -66,7 +66,7 @@ contract CTokenPool {
         bytes4 functionSelector = bytes4(keccak256("addMemberReserve(address,uint,address)"));
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
 
-        require(sendMessage(destinationChain, ccipGateWay, data) != 0, "addMemberReserve message sending Failed");
+        ccipGateWay.call(data);
     }
     
     function withdrawDaoReserve(uint256 amount) public {
@@ -80,7 +80,7 @@ contract CTokenPool {
         bytes4 functionSelector = bytes4(keccak256("withdrawDaoReserve(uint,address)"));
         bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
         
-        require(sendMessage(destinationChain, ccipGateWay, data, "Withdraw message sending Failed"));
+        ccipGateWay.call(data);
     }
 
     function withdrawMemberReserve(address dao, uint256 amount) public {
@@ -94,6 +94,6 @@ contract CTokenPool {
         bytes4 functionSelector = bytes4(keccak256("withdrawMemberReserve(address,uint,address)"));
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
         
-        require(sendMessage(destinationChain, ccipGateWay, data, "Withdraw message sending Failed"));
+        ccipGateWay.call(data);
     }
 }
