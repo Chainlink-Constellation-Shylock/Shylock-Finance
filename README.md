@@ -2,19 +2,13 @@
 
 ## Introduction to Shylock Finance
 
-Shylock Finance is an innovative DeFi project designed to facilitate cross-chain lending and borrowing. At its core, it leverages the fundamental system of the Compound Protocol but stands out with its unique feature: an under-collateralized loan system. This groundbreaking approach allows users to borrow amounts exceeding their collateral value. This capability is enabled through the integration of a comprehensive credit score system and the decentralized autonomous organization (DAO) to which the user belongs.
+Shylock Finance is an innovative DeFi project designed to facilitate **cross-chain lending and borrowing**. At its core, it leverages the fundamental system of the **Compound Protocol** but stands out with its unique feature: an **under-collateralized loan** system.
 
-Central to the project's vision is its cross-chain compatibility, achieved via the Cross-Chain Interoperability Protocol (CCIP) developed by Chainlink. This feature empowers users to seamlessly borrow and lend assets across various blockchains, enhancing the flexibility and reach of the DeFi ecosystem. Currently, Shylock Finance operates on the Avalanche C-Chain (Fuji) and Ethereum (Sepolia) networks, with plans for expansion to additional blockchains in the future.
-
-This ambitious project aims not only to revolutionize the way lending and borrowing are conducted in the digital asset space but also to bridge the gaps between different blockchain networks, thereby fostering a more interconnected and efficient DeFi environment.
+This groundbreaking approach allows users to borrow amounts exceeding their collateral value. This is made possible through a comprehensive credit score system, DAO membership, and enhanced KYC procedures using DID technology, ensuring both security and accessibility.
 
 **What is Shylock?**
 
-The name "Shylock" is derived from a character in William Shakespeare's play "The Merchant of Venice." In the play, Shylock is a complex character, known for his role as a moneylender who charges high interests. He is often remembered for his strict adherence to the letter of the law and his insistence on the enforcement of a bond.
-
-In the context of Shylock Finance, the name has been chosen to reflect a deep understanding and a nuanced approach to lending and borrowing in the world of decentralized finance (DeFi). Just as Shylock in the play represents the concept of lending with strict terms, Shylock Finance embodies a new era of lending protocols where the focus is on innovative and flexible lending solutions. Unlike the character, however, Shylock Finance aims to foster a more equitable and accessible financial ecosystem. The utilization of a credit score system and DAO memberships for under-collateralized loans showcases a commitment to modernizing lending practices while ensuring security and trust in the DeFi space.
-
-Thus, "Shylock" in the context of our project is symbolic of a transformation in lending – moving from the rigid and often punitive practices of the past to a more inclusive, innovative, and user-friendly approach that leverages the latest in blockchain technology.
+The name **"Shylock"** is inspired by a character from William Shakespeare's "The Merchant of Venice." Known as a stringent moneylender, Shylock's character is synonymous with strict lending terms. In contrast, Shylock Finance reinterprets this concept for the DeFi world, focusing on innovative and flexible lending solutions. While drawing inspiration from Shylock’s adherence to strict principles, our project diverges by promoting a more equitable and accessible financial ecosystem.
 
 ## 2. 소개
 
