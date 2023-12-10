@@ -22,13 +22,7 @@ contract ShylockCErc20Crosschain is ShylockCErc20, CCIPMessageManager {
     }
 
     function doTransferIn(address from, address to, uint amount) internal override(CErc20, CToken){
-        bytes32 functionSelector = stringToBytes32("doTransferIn");
-        bytes32 data2 = bytes32(amount);
-        bytes32 data3 = bytes32(uint256(from));
-        bytes32 data4 = bytes32(uint256(to));
-        bytes memory data = abi.encode(functionSelector, data2, data3, data4);
-
-        sendMessage(to, functionSelector, data2, data3);
+        
     }
 
     function _ccipReceive(
