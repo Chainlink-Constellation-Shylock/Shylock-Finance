@@ -18,8 +18,8 @@ import "forge-std/Test.sol";
 
 // deploy & initializes bCompound Contracts
 contract CompoundDeployment is Test, ERC20Fixtures {
-    ShylockCErc20 sDAI;
-    CEther sETH;
+    ShylockCErc20 bDAI;
+    CEther bETH;
     CToken cToken;
     CToken cEther;
     ShylockComptroller comptroller;
@@ -77,7 +77,7 @@ contract CompoundDeployment is Test, ERC20Fixtures {
 
         address ccipGateWay = address(0);
 
-        sDAI = new ShylockCErc20(
+        bDAI = new ShylockCErc20(
             address(daiToken),
             ShylockComptrollerInterface(address(unitroller)),
             interestRateModel,
@@ -90,7 +90,7 @@ contract CompoundDeployment is Test, ERC20Fixtures {
 
 
         // deploy cETH
-        sETH = new CEther(
+        bETH = new CEther(
             ShylockComptrollerInterface(address(unitroller)),
             interestRateModel,
             2**18,
@@ -101,19 +101,19 @@ contract CompoundDeployment is Test, ERC20Fixtures {
         );
 
         // declare interfaces
-        cToken = CToken(address(sDAI));
-        cEther = CToken(address(sETH));
+        cToken = CToken(address(bDAI));
+        cEther = CToken(address(bETH));
 
         ComptrollerInterface(address(unitroller))._supportMarket(cToken);
         ComptrollerInterface(address(unitroller))._supportMarket(cToken);
         // ComptrollerInterface(address(unitroller))._setBorrowPaused(cToken, true);
 
         if (BDAI) {
-            cDAIToken = CERC20Mock(address(sDAI));
+            cDAIToken = CERC20Mock(address(bDAI));
             // liquidity.setCAssetAddress(address(daiToken), address(cDAIToken));
             // liquidity.setMaxCAssetBalance(address(cDAIToken), ~uint256(0));
 
-            cEtherToken = CEtherMock(address(sETH));
+            cEtherToken = CEtherMock(address(bETH));
             // liquidity.setCAssetAddress(address(ETH_ADDRESS), address(cEtherToken));
             // liquidity.setMaxCAssetBalance(address(cEtherToken), ~uint256(0));
         }

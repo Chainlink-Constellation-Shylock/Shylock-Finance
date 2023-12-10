@@ -5,23 +5,7 @@ import { ERC20Upgradeable, IERC20Upgradeable } from "@openzeppelin-upgradeable/c
 import "@openzeppelin-upgradeable/contracts/utils/AddressUpgradeable.sol";
 import { CustomMath } from "../utils/CustomMath.sol";
 import { IERC20Upgradeable } from "@openzeppelin-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import { ICToken } from "../interfaces/ICToken.sol";
-
-interface ICEther is ICToken {
-    /**
-     * @notice Sender supplies assets into the market and receives cTokens in exchange
-     * @dev Reverts upon any failure
-     */
-    function mint() external payable;
-
-    /**
-     * @notice Sender redeems cTokens in exchange for a specified amount of underlying asset
-     * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param redeemAmount The amount of underlying to redeem
-     * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
-     */
-    function redeemUnderlying(uint256 redeemAmount) external returns (uint256);
-}
+import { ICEther } from "../interfaces/ICEther.sol";
 
 contract CEtherMock is ERC20Upgradeable, ICEther {
     bool public transferFromFail;
