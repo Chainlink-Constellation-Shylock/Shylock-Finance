@@ -33,7 +33,7 @@ contract CcipGateway is CCIPReceiver {
         bytes memory data
     ) external returns (bytes32 messageId) {
         uint64 destinationChain = destinationChainSelector[msg.sender];
-        address receiverContract = tokenPoolAddress[msg.sender];
+        address receiverAddress = tokenPoolAddress[msg.sender];
 
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
             receiver: abi.encode(receiverAddress), // ABI-encoded receiver contract address
