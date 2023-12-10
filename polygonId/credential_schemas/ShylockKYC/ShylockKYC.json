@@ -1,0 +1,123 @@
+{
+    "$metadata": {
+        "type": "KYC",
+        "uris": {
+            "jsonLdContext": "ipfs://QmNrDfpNdGEaTDUm61GXH62s2AF72QzBA4MUZLquxrB6B2"
+        },
+        "version": "1.1"
+    },
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "description": "Simple KYC schema for Shylock-Finance, the under-collateralized lending-protocol.",
+    "title": "ShylockKYC",
+    "properties": {
+        "@context": {
+            "type": [
+                "string",
+                "array",
+                "object"
+            ]
+        },
+        "expirationDate": {
+            "format": "date-time",
+            "type": "string"
+        },
+        "id": {
+            "type": "string"
+        },
+        "issuanceDate": {
+            "format": "date-time",
+            "type": "string"
+        },
+        "issuer": {
+            "type": [
+                "string",
+                "object"
+            ],
+            "format": "uri",
+            "properties": {
+                "id": {
+                    "format": "uri",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ]
+        },
+        "type": {
+            "type": [
+                "string",
+                "array"
+            ],
+            "items": {
+                "type": "string"
+            }
+        },
+        "credentialSubject": {
+            "description": "Stores the data of the credential",
+            "title": "Credential subject",
+            "properties": {
+                "id": {
+                    "description": "Stores the DID of the subject that owns the credential",
+                    "title": "Credential subject ID",
+                    "format": "uri",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Full legal name of the subject",
+                    "title": "Credential subject name",
+                    "type": "string"
+                },
+                "birthDate": {
+                    "description": "Legal birth date of the credential subject",
+                    "title": "Birth date of the credential subject",
+                    "format": "date",
+                    "type": "string"
+                },
+                "address": {
+                    "description": "Legal address of the credential subject",
+                    "title": "Address of the credential subject",
+                    "type": "string"
+                },
+                "gotKYC": {
+                    "default": false,
+                    "description": "Whether the subject got KYC or not.",
+                    "title": "KYC",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "name",
+                "birthDate",
+                "gotKYC"
+            ],
+            "type": "object"
+        },
+        "credentialSchema": {
+            "properties": {
+                "id": {
+                    "format": "uri",
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "type"
+            ],
+            "type": "object"
+        }
+    },
+    "required": [
+        "@context",
+        "id",
+        "issuanceDate",
+        "issuer",
+        "type",
+        "credentialSubject",
+        "credentialSchema"
+    ],
+    "type": "object"
+}
