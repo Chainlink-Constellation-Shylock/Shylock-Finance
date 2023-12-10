@@ -1,10 +1,12 @@
 # Shylock Finance
 
-## 1. Introduction
+## Introduction to Shylock Finance
 
-Shylock Finance is a DeFi project that aims to provide cross-chain lending and borrowing. While it uses base system of Compound Protocol, its uniqueness lies in the fact that it offers an under-collateralized loan system. This means that users can borrow more than the value of their collateral. This is made possible by the use of a credit score system and DAO the user belongs to.
+Shylock Finance is an innovative DeFi project designed to facilitate cross-chain lending and borrowing. At its core, it leverages the fundamental system of the Compound Protocol but stands out with its unique feature: an under-collateralized loan system. This groundbreaking approach allows users to borrow amounts exceeding their collateral value. This capability is enabled through the integration of a comprehensive credit score system and the decentralized autonomous organization (DAO) to which the user belongs.
 
-The project is built to be cross-chain compatible using CCIP(Cross-Chain Interoperability Protocol) of Chainlink. This means that users can borrow and lend assets from different blockchains. The project is built on the Avalanche C-Chain(Fuji) and Ethereum(Sepolia) and will be expanded to other blockchains in the future.
+Central to the project's vision is its cross-chain compatibility, achieved via the Cross-Chain Interoperability Protocol (CCIP) developed by Chainlink. This feature empowers users to seamlessly borrow and lend assets across various blockchains, enhancing the flexibility and reach of the DeFi ecosystem. Currently, Shylock Finance operates on the Avalanche C-Chain (Fuji) and Ethereum (Sepolia) networks, with plans for expansion to additional blockchains in the future.
+
+This ambitious project aims not only to revolutionize the way lending and borrowing are conducted in the digital asset space but also to bridge the gaps between different blockchain networks, thereby fostering a more interconnected and efficient DeFi environment.
 
 **What is Shylock?**
 
