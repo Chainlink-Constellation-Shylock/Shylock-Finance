@@ -2,7 +2,7 @@ import { TabsContent } from "../ui/tabs";
 import { useState } from "react";
 import { useWeb3ModalAccount } from '@web3modal/ethers5/react';
 
-export default function UniswapScore() {
+export default function RepayBox() {
   const { address } = useWeb3ModalAccount();
   const [daoScore, setDaoScore] = useState(0);
   const [reputationScore, setReputationScore] = useState(0);

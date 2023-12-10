@@ -1,6 +1,6 @@
 import { TabsContent } from "../ui/tabs"
 
-export default function MockScore() {
+export default function WithdrawBox() {
   return (
     <div>
       <TabsContent>

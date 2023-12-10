@@ -1,5 +1,5 @@
 // @TODO: Fix Dashboard to Lending
-import Dashboard from "@/app/components/dashboardComponent";
+import Lending from "@/app/components/lendingComponent";
 import Footer from "@/app/footer";
 import Header from "@/app/header";
 
@@ -8,7 +8,7 @@ export default function Page() {
     <main>
       <div className="flex flex-col min-h-[100vh] bg-[#f5f1e8]">
         <Header />
-        <Dashboard />
+        <Lending />
         <Footer />
       </div>
     </main>

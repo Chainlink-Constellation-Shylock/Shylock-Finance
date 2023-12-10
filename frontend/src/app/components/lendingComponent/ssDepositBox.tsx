@@ -1,6 +1,6 @@
 import { TabsContent } from "../ui/tabs"
 
-export default function MockScore() {
+export default function LendBox() {
   return (
     <div>
       <TabsContent>
