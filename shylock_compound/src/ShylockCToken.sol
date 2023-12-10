@@ -47,20 +47,14 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         return borrowContract;
     }
 
-    function addDaoReserveInternal(uint reserveAmount, uint64 chainId) internal nonReentrant {
+    function addDaoReserveInternal(uint reserveAmount) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
         if (allowed != 0) {
             revert AddDaoReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount;
-        if(chainId == 0){
-            actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
-        }
-        else{
-            actualReserveAmount = reserveAmount;
-        }
+        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
 
         shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
         totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
@@ -68,20 +62,14 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         emit AddDaoReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
     }
 
-    function addMemberReserveInternal(address dao, uint reserveAmount, uint64 chainId) internal nonReentrant {
+    function addMemberReserveInternal(address dao, uint reserveAmount) internal nonReentrant {
         /* Fail if Member not allowed */
         uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, msg.sender, reserveAmount);
         if (allowed != 0) {
             revert AddMemberReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount;
-        if(chainId == 0){
-            actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
-        }
-        else{
-            actualReserveAmount = reserveAmount;
-        }
+        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
 
         shylockReserve[msg.sender] = add_(shylockReserve[msg.sender], actualReserveAmount);
         totalShylockReserve = add_(totalShylockReserve, actualReserveAmount);
@@ -89,7 +77,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         emit AddMemberReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
     }
 
-    function withdrawDaoReserveInternal(uint withdrawTokens, uint64 chainId) internal nonReentrant {
+    function withdrawDaoReserveInternal(uint withdrawTokens) internal nonReentrant {
         /* Fail if Dao not allowed */
         uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), msg.sender, withdrawTokens);
         if (allowed != 0) {
@@ -100,12 +88,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             revert WithdrawDaoReserveInsufficientBalance();
         }
         
-        if(chainId == 0){
-            doTransferOut(payable(msg.sender), withdrawTokens);
-        }
-        else{
-            doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
-        }
+        doTransferOut(payable(msg.sender), withdrawTokens);
 
         shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
         totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
@@ -113,7 +96,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         emit WithdrawDaoReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }
     
-    function withdrawMemberReserveInternal(address dao, uint withdrawTokens, uint64 chainId) internal nonReentrant {
+    function withdrawMemberReserveInternal(address dao, uint withdrawTokens) internal nonReentrant {
         /* Fail if Member not allowed */
         uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, msg.sender, withdrawTokens);
         if (allowed != 0) {
@@ -124,12 +107,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
             revert WithdrawMemberReserveInsufficientBalance();
         }
         
-        if(chainId==0){
-            doTransferOut(payable(msg.sender), withdrawTokens);
-        }
-        else{
-            doTransferOut_Crosschain(payable(msg.sender), withdrawTokens, chainId);
-        }
+        doTransferOut(payable(msg.sender), withdrawTokens);
 
         shylockReserve[msg.sender] = sub_(shylockReserve[msg.sender], withdrawTokens);
         totalShylockReserve = sub_(totalShylockReserve, withdrawTokens);
@@ -137,13 +115,13 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         emit WithdrawMemberReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
     }
 
-    function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount, uint64 chainId) internal nonReentrant {
+    function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount) internal nonReentrant {
         accrueInterest();
         // borrowFresh emits borrow-specific logs on errors, so we don't need to
-        borrowFresh(dao, payable(msg.sender), dueTimestamp, borrowAmount, chainId);
+        borrowFresh(dao, payable(msg.sender), dueTimestamp, borrowAmount);
     }
 
-    function borrowFresh(address dao, address payable borrower, uint dueTimestamp, uint borrowAmount, uint64 chainId) internal {
+    function borrowFresh(address dao, address payable borrower, uint dueTimestamp, uint borrowAmount) internal {
         /* Fail if borrow not allowed */
         uint allowed = comptroller.borrowAllowed(address(this), dao, borrower, borrowAmount);
         if (allowed != 0) {
@@ -193,26 +171,20 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         accountBorrows[borrower].interestIndex = borrowIndex;
         totalBorrows = totalBorrows + actualBorrowAmount;
 
-
-        if(chainId == 0){
-            doTransferOut(borrower, actualBorrowAmount);
-        }
-        else{
-            doTransferOut_Crosschain(borrower, actualBorrowAmount, chainId);
-        }
+        doTransferOut(borrower, actualBorrowAmount);
 
         /* We emit a Borrow event */
         emit Borrow(borrower, actualBorrowAmount, accountBorrowsPrev + actualBorrowAmount, totalBorrows + actualBorrowAmount);
     }
 
 
-    function repayBorrowInternal(address dao, uint repayAmount, uint index, uint64 chainId) internal nonReentrant {
+    function repayBorrowInternal(address dao, uint repayAmount, uint index) internal nonReentrant {
         accrueInterest();
         // repayBorrowFresh emits repay-borrow-specific logs on errors, so we don't need to
-        repayBorrowFresh(msg.sender, dao, msg.sender, repayAmount, index, chainId);
+        repayBorrowFresh(msg.sender, dao, msg.sender, repayAmount, index);
     }
 
-    function repayBorrowFresh(address payer, address dao, address borrower, uint repayAmount, uint index, uint64 chainId) internal returns (uint) {
+    function repayBorrowFresh(address payer, address dao, address borrower, uint repayAmount, uint index) internal returns (uint) {
         /* Fail if repayBorrow not allowed */
         uint allowed = comptroller.repayBorrowAllowed(address(this), payer, borrower, repayAmount);
         if (allowed != 0) {
@@ -231,12 +203,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         uint repayAmountFinal = repayAmount == type(uint).max ? accountBorrowsPrev : repayAmount;
 
         uint actualRepayAmount;
-        if(chainId == 0){
-            actualRepayAmount = doTransferIn(payer, repayAmountFinal);
-        }
-        else{
-            actualRepayAmount = repayAmountFinal;
-        }
+        actualRepayAmount = doTransferIn(payer, repayAmountFinal);
 
         uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
         uint memberGuaranteeCollateral = div_(actualRepayAmount, memberCollateralRateMantissa);
