@@ -13,9 +13,7 @@ import "./interface/ShylockComptrollerStorage.sol";
  */
 
 
-abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
-    function doTransferOut_Crosschain(address payable to, uint amount, uint64 chainId) virtual internal;
-    
+abstract contract ShylockCToken is CToken, ShylockCTokenInterface {    
     function getAccountGuarantee(address account) public view returns (uint) {
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
@@ -68,7 +66,6 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
         totalShylockReserve = totalShylockReserve + actualReserveAmount;
 
         emit AddDaoReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
-
     }
 
     function addMemberReserveInternal(address dao, uint reserveAmount, uint64 chainId) internal nonReentrant {
