@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20Upgradeable } from "@openzeppelin-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
-contract ERC20Mock is ERC20 {
+contract ERC20Mock is ERC20Upgradeable {
     bool public transferFromFail;
     bool public transferFail;
 

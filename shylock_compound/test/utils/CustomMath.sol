@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 /// @title A reimplementation of compounds math library
 ///        Currently we only need `divScalarByExpTruncate` which is implemented inefficiently and complex within
 ///        the compound math library, this is a simpler reimplementation.
-library Math {
+library CustomMath {
     uint256 constant expScale = 1e18;
 
     // See compound Exponential#divScalarByExpTruncate
