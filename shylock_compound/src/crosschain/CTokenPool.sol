@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {LinkTokenInterface} from "@chainlink/contracts/interfaces/LinkTokenInterface.sol";
 import {Client} from "@chainlink/contracts-ccip/ccip/libraries/Client.sol";
-import {IRouterClient} from "@chainlink/contracts-ccip/ccip/interfaces/IRouterClient.sol";
 import {CCIPReceiver} from "@chainlink/contracts-ccip/ccip/applications/CCIPReceiver.sol";
 import {IERC20} from "@chainlink/contracts-ccip/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
 import {CCIPMessageManager} from "./CCIPMessageManager.sol";
@@ -55,6 +54,7 @@ contract CTokenPool is CCIPMessageManager {
 
         if (functionSelector == stringToBytes32("doTransferOut")) {
             uint256 amount = uint256(data2);
+            address fromAddress = sender;
             address toAddress = address(uint160(uint256(data3)));
 
             doTransferOut(amount, fromAddress, toAddress);
@@ -69,7 +69,7 @@ contract CTokenPool is CCIPMessageManager {
 
         deposits[msg.sender] += amount;
 
-        require(sendMessage(cTokenAddress, stringToBytes32("addDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
+        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("addDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
     }
 
     function addMemberReserve(address dao, uint256 amount) external payable {
@@ -78,7 +78,7 @@ contract CTokenPool is CCIPMessageManager {
 
         deposits[msg.sender] += amount;
 
-        require(sendMessage(cTokenAddress, stringToBytes32("addMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
+        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("addMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
     }
 
     function doTransferOut(uint256 amount, address fromAddress, address toAddress) public {
@@ -98,7 +98,7 @@ contract CTokenPool is CCIPMessageManager {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        require(sendMessage(cTokenAddress, stringToBytes32("withdrawDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
+        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("withdrawDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
     }
 
     function withdrawMemberReserve(address dao, uint256 amount) public {
@@ -109,21 +109,6 @@ contract CTokenPool is CCIPMessageManager {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        require(sendMessage(cTokenAddress, stringToBytes32("withdrawMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
-    }
-
-    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
-
-    function addressToBytes32(address source) public pure returns (bytes32 result){
-        return bytes32(uint256(uint160(source)));
+        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("withdrawMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
     }
 }

@@ -12,18 +12,26 @@ import "./crosschain/CCIPMessageManager.sol";
 
 
 contract ShylockCErc20Crosschain is ShylockCErc20, CCIPMessageManager {
-    function doTransferOut(address payable to, uint amount) internal override(CErc20, CToken){
+
+    uint64 destinationChainSelector;
+    address tokenPoolAddress;
+
+    constructor(address _router, address link, uint64 _destinationChainSelector, address _tokenPoolAddress) CCIPMessageManager(_router, link) {
+        destinationChainSelector = _destinationChainSelector;
+        tokenPoolAddress = _tokenPoolAddress;
+    }
+
+    function doTransferOut(address to, uint amount) internal override(CErc20, CToken){
         bytes32 functionSelector = stringToBytes32("doTransferOut");
         bytes32 data2 = bytes32(amount);
-        bytes32 data3 = bytes32(uint256(to));
-        bytes memory data = abi.encode(functionSelector, data2, data3);
+        bytes32 data3 = bytes32(uint256(uint160(to)));
 
-        sendMessage(to, functionSelector, data2, data3);
+        sendMessage(destinationChainSelector, tokenPoolAddress, functionSelector, data2, data3, bytes32(0));
     }
 
-    function doTransferIn(address from, address to, uint amount) internal override(CErc20, CToken){
+    // function doTransferIn(address from, address to, uint amount) internal override(CErc20, CToken){
         
-    }
+    // }
 
     function _ccipReceive(
         Client.Any2EVMMessage memory message
@@ -44,11 +52,19 @@ contract ShylockCErc20Crosschain is ShylockCErc20, CCIPMessageManager {
         // Add the message ID to the array of received messages.
         receivedMessages.push(messageId);
 
+        (
+            bytes32 functionSelector,
+            bytes32 data2,
+            bytes32 data3,
+            bytes32 data4
+        ) = decodePayload(data);
+
         if (functionSelector == stringToBytes32("doTransferIn")) {
             uint256 amount = uint256(data2);
             address fromAddress = address(uint160(uint256(data3)));
+            address toAddress = address(uint160(uint256(data4)));
 
-            doTransferIn(amount, fromAddress, toAddress);
+            // doTransferIn(amount, fromAddress, toAddress);
         }
     }
 }

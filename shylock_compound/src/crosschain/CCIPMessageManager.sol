@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {LinkTokenInterface} from "@chainlink/contracts/interfaces/LinkTokenInterface.sol";
 import {CCIPReceiver} from "@chainlink/contracts-ccip/ccip/applications/CCIPReceiver.sol";
 import {Client} from "@chainlink/contracts-ccip/ccip/libraries/Client.sol";
+import {IRouterClient} from "@chainlink/contracts-ccip/ccip/interfaces/IRouterClient.sol";
 
 
 abstract contract CCIPMessageManager is CCIPReceiver {
@@ -50,6 +51,7 @@ abstract contract CCIPMessageManager is CCIPReceiver {
     }
 
     function sendMessage(
+        uint64 destinationChain,
         address receiverAddress,
         bytes32 functionSelector,
         bytes32 data2,
@@ -117,5 +119,20 @@ abstract contract CCIPMessageManager is CCIPReceiver {
         }
 
         return (functionSelector, arg1, arg2, arg3);
+    }
+
+    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            result := mload(add(source, 32))
+        }
+    }
+
+    function addressToBytes32(address source) public pure returns (bytes32 result){
+        return bytes32(uint256(uint160(source)));
     }
 }
