@@ -14,6 +14,15 @@ export async function queryUniswapPoints(username: string) : Promise<bigint | st
       .toString();
   const args = [username];
   const res = await makeSimulation(source, args);
-  await makeRequestFuji(consumerAddress, subscriptionId, source, args);
   return res;
+}
+
+export async function makeRequestForUniswapFuji(username: string) : Promise<void> {
+  const consumerAddress: string = "0xf9Fd56F85047A1d736B9Ee26D82Ae72D20d1F9Ac";
+  const subscriptionId: number = 1865;
+  const source: string = fs
+      .readFileSync(path.resolve(__dirname, "getUniswapPoint.js"))
+      .toString();
+  const args = [username];
+  await makeRequestFuji(consumerAddress, subscriptionId, source, args);
 }

@@ -1,5 +1,10 @@
 import express, {Request, Response} from 'express';
-import { querySnapshotPoints, queryUniswapPoints} from '../chainlink_functions';
+import {
+    querySnapshotPoints,
+    queryUniswapPoints,
+    makeRequestForSnapshotFuji,
+    makeRequestForUniswapFuji
+} from '../chainlink_functions';
 
 const router = express.Router();
 
@@ -11,9 +16,25 @@ router.get('/:dao/:username', async (req: Request, res: Response, next) => {
         console.log(snapShotPoint);
         const uniswapPoint = await queryUniswapPoints(userAddr);
         console.log(uniswapPoint);
-        // const userPointString = snapShotPoint?.toString();
+        if (snapShotPoint === undefined || uniswapPoint === undefined) {
+            return res.status(400).send('No data');
+        }
+        const userPointString = parseInt(snapShotPoint.toString());
+        const uniswapPointString = parseInt(uniswapPoint.toString());
 
-        return res.status(200);
+        res.status(200).json(
+            {
+                "snapshot": userPointString,
+                "uniswap": uniswapPointString,
+            }
+        );
+
+        makeRequestForSnapshotFuji(dao, userAddr).then(() => {
+            console.log("Request for snapshot point sent");
+            makeRequestForUniswapFuji(userAddr).then(() => {
+                console.log("Request for uniswap point sent");
+            })
+        });
     } catch (error) {
         console.error(error);
         next(error);

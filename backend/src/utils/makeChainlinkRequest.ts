@@ -48,7 +48,7 @@ export async function makeRequestFuji(
   const routerAddress: string = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0";
   const linkTokenAddress: string = "0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846";
   const donId: string = "fun-avalanche-fuji-1";
-  const explorerUrl: string = "https://testnet.avascan.info/";
+  const explorerUrl: string = "https://testnet.snowtrace.io";
 
   const gasLimit: number = 300000;
 

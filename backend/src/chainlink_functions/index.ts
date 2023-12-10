@@ -1,5 +1,5 @@
-import { querySnapshotPoints } from "./querySnapshotPoints";
-import { queryUniswapPoints } from "./queryUniswapPoints";
+import { querySnapshotPoints, makeRequestForSnapshotFuji } from "./querySnapshotPoints";
+import { queryUniswapPoints, makeRequestForUniswapFuji } from "./queryUniswapPoints";
 
 
-export {querySnapshotPoints, queryUniswapPoints};
+export {querySnapshotPoints, queryUniswapPoints, makeRequestForSnapshotFuji, makeRequestForUniswapFuji};
