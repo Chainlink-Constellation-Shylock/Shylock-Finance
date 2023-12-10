@@ -25,14 +25,8 @@ contract CcipGateway is CCIPReceiver {
 
         uint64 sourceChainSelector = message.sourceChainSelector;
 
-        // Get the message data.
-        bytes memory encodedCall = message.data;
-
         // Call the function to handle the message.
-        // (bool success, bytes memory returnData) = tokenAddress[sourceChainSelector][sender].call(encodedCall);
-        (bool success, bytes memory returndata) = tokenAddress[sourceChainSelector][sender].call(
-            abi.encodePacked(encodedCall, sender)
-        );
+        (bool success, bytes memory returndata) = tokenAddress[sourceChainSelector][sender].call(message.data);
     }
 
     function sendMessage(

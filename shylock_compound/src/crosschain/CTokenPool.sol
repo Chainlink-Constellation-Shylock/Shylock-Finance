@@ -51,8 +51,9 @@ contract CTokenPool {
 
         deposits[msg.sender] += amount;
 
-        bytes4 functionSelector = bytes4(keccak256("addDaoReserve(uint,address)"));
-        bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
+        bytes4 functionSelector = bytes4(keccak256("addDaoReserve(uint)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, amount);
+        data = abi.encodePacked(data, msg.sender);
 
         ccipGateWay.call(data);
     }
@@ -63,8 +64,9 @@ contract CTokenPool {
 
         deposits[msg.sender] += amount;
 
-        bytes4 functionSelector = bytes4(keccak256("addMemberReserve(address,uint,address)"));
-        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
+        bytes4 functionSelector = bytes4(keccak256("addMemberReserve(address,uint)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
+        data = abi.encodePacked(data, msg.sender);
 
         ccipGateWay.call(data);
     }
@@ -77,9 +79,10 @@ contract CTokenPool {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        bytes4 functionSelector = bytes4(keccak256("withdrawDaoReserve(uint,address)"));
-        bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
-        
+        bytes4 functionSelector = bytes4(keccak256("withdrawDaoReserve(uint)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, amount);
+        data = abi.encodePacked(data, msg.sender);
+
         ccipGateWay.call(data);
     }
 
@@ -91,8 +94,9 @@ contract CTokenPool {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        bytes4 functionSelector = bytes4(keccak256("withdrawMemberReserve(address,uint,address)"));
-        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
+        bytes4 functionSelector = bytes4(keccak256("withdrawMemberReserve(address,uint)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
+        data = abi.encodePacked(data, msg.sender);
         
         ccipGateWay.call(data);
     }
