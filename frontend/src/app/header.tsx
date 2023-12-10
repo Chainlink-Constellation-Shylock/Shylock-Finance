@@ -1,5 +1,6 @@
 import Link from "next/link";
-import KeyIcon from "@/components/ui/keyIcon";
+import KeyIcon from "@/app/components/ui/keyIcon";
+import ConnectButton from "@/app/components/ui/connectButton";
 
 export default function Header() {
   return(
@@ -12,9 +13,10 @@ export default function Header() {
         <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="/dashboard">
           Dashboard
         </Link>
-        <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="#">
+        <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="/lending">
           Lending
         </Link>
+        <ConnectButton />
       </nav>
     </header>
   )
