@@ -7,3 +7,6 @@
 [submodule "shylock_compound/lib/forge-std"]
 	path = shylock_compound/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "shylock_compound/lib/openzeppelin-contracts"]
+	path = shylock_compound/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
