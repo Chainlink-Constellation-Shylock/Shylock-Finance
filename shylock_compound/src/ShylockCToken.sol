@@ -5,6 +5,7 @@ import "./compound/CToken.sol";
 import "./interface/ShylockCTokenInterfaces.sol";
 import "./interface/ShylockComptrollerInterface.sol";
 import "./interface/ShylockComptrollerStorage.sol";
+import "@openzeppelin-upgradeable/contracts/metatx/ERC2771ContextUpgradeable.sol";
 
 /**
  * @title Shylock Finance's CToken Contract
@@ -13,7 +14,7 @@ import "./interface/ShylockComptrollerStorage.sol";
  */
 
 
-abstract contract ShylockCToken is CToken, ShylockCTokenInterface {    
+abstract contract ShylockCToken is CToken, ShylockCTokenInterface, ERC2771ContextUpgradeable {    
     function getAccountGuarantee(address account) public view returns (uint) {
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
@@ -49,76 +50,76 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
     function addDaoReserveInternal(uint reserveAmount) internal nonReentrant {
         /* Fail if Dao not allowed */
-        uint allowed = comptroller.addDaoReserveAllowed(address(this), msg.sender, reserveAmount);
+        uint allowed = comptroller.addDaoReserveAllowed(address(this), _msgSender(), reserveAmount);
         if (allowed != 0) {
             revert AddDaoReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        uint actualReserveAmount = doTransferIn(_msgSender(), reserveAmount);
 
-        shylockReserve[msg.sender] = shylockReserve[msg.sender] + actualReserveAmount;
+        shylockReserve[_msgSender()] = shylockReserve[_msgSender()] + actualReserveAmount;
         totalShylockReserve = totalShylockReserve + actualReserveAmount;
 
-        emit AddDaoReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
+        emit AddDaoReserve(_msgSender(), actualReserveAmount, shylockReserve[_msgSender()]);
     }
 
     function addMemberReserveInternal(address dao, uint reserveAmount) internal nonReentrant {
         /* Fail if Member not allowed */
-        uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, msg.sender, reserveAmount);
+        uint allowed = comptroller.addMemberReserveAllowed(address(this), dao, _msgSender(), reserveAmount);
         if (allowed != 0) {
             revert AddMemberReserveComptrollerRejection(allowed);
         }
 
-        uint actualReserveAmount = doTransferIn(msg.sender, reserveAmount);
+        uint actualReserveAmount = doTransferIn(_msgSender(), reserveAmount);
 
-        shylockReserve[msg.sender] = shylockReserve[msg.sender] + actualReserveAmount;
+        shylockReserve[_msgSender()] = shylockReserve[_msgSender()] + actualReserveAmount;
         totalShylockReserve = totalShylockReserve + actualReserveAmount;
 
-        emit AddMemberReserve(msg.sender, actualReserveAmount, shylockReserve[msg.sender]);
+        emit AddMemberReserve(_msgSender(), actualReserveAmount, shylockReserve[_msgSender()]);
     }
 
     function withdrawDaoReserveInternal(uint withdrawTokens) internal nonReentrant {
         /* Fail if Dao not allowed */
-        uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), msg.sender, withdrawTokens);
+        uint allowed = comptroller.withdrawDaoReserveAllowed(address(this), _msgSender(), withdrawTokens);
         if (allowed != 0) {
             revert WithdrawDaoReserveComptrollerRejection(allowed);
         }
 
-        if (shylockReserve[msg.sender] < withdrawTokens) {
+        if (shylockReserve[_msgSender()] < withdrawTokens) {
             revert WithdrawDaoReserveInsufficientBalance();
         }
         
-        doTransferOut(payable(msg.sender), withdrawTokens);
+        doTransferOut(payable(_msgSender()), withdrawTokens);
 
-        shylockReserve[msg.sender] = shylockReserve[msg.sender] - withdrawTokens;
+        shylockReserve[_msgSender()] = shylockReserve[_msgSender()] - withdrawTokens;
         totalShylockReserve = totalShylockReserve - withdrawTokens;
 
-        emit WithdrawDaoReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
+        emit WithdrawDaoReserve(_msgSender(), withdrawTokens, shylockReserve[_msgSender()]);
     }
     
     function withdrawMemberReserveInternal(address dao, uint withdrawTokens) internal nonReentrant {
         /* Fail if Member not allowed */
-        uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, msg.sender, withdrawTokens);
+        uint allowed = comptroller.withdrawMemberReserveAllowed(address(this), dao, _msgSender(), withdrawTokens);
         if (allowed != 0) {
             revert WithdrawMemberReserveComptrollerRejection(allowed);
         }
         
-        if (shylockReserve[msg.sender] < withdrawTokens) {
+        if (shylockReserve[_msgSender()] < withdrawTokens) {
             revert WithdrawMemberReserveInsufficientBalance();
         }
         
-        doTransferOut(payable(msg.sender), withdrawTokens);
+        doTransferOut(payable(_msgSender()), withdrawTokens);
 
-        shylockReserve[msg.sender] = shylockReserve[msg.sender] - withdrawTokens;
+        shylockReserve[_msgSender()] = shylockReserve[_msgSender()] - withdrawTokens;
         totalShylockReserve = totalShylockReserve- withdrawTokens;
 
-        emit WithdrawMemberReserve(msg.sender, withdrawTokens, shylockReserve[msg.sender]);
+        emit WithdrawMemberReserve(_msgSender(), withdrawTokens, shylockReserve[_msgSender()]);
     }
 
     function borrowInternal(address dao, uint dueTimestamp, uint borrowAmount) internal nonReentrant {
         accrueInterest();
         // borrowFresh emits borrow-specific logs on errors, so we don't need to
-        borrowFresh(dao, payable(msg.sender), dueTimestamp, borrowAmount);
+        borrowFresh(dao, payable(_msgSender()), dueTimestamp, borrowAmount);
     }
 
     function borrowFresh(address dao, address payable borrower, uint dueTimestamp, uint borrowAmount) internal {
@@ -181,7 +182,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
     function repayBorrowInternal(address dao, uint repayAmount, uint index) internal nonReentrant {
         accrueInterest();
         // repayBorrowFresh emits repay-borrow-specific logs on errors, so we don't need to
-        repayBorrowFresh(msg.sender, dao, msg.sender, repayAmount, index);
+        repayBorrowFresh(_msgSender(), dao, _msgSender(), repayAmount, index);
     }
 
     function repayBorrowFresh(address payer, address dao, address borrower, uint repayAmount, uint index) internal returns (uint) {
@@ -245,5 +246,44 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface {
 
         return actualRepayAmount;
     }
+
+    
+    /**
+     * @dev Override for `msg.sender`. Defaults to the original `msg.sender` whenever
+     * a call is not performed by the trusted forwarder or the calldata length is less than
+     * 20 bytes (an address length).
+     */
+    function _msgSender() internal view virtual override returns (address) {
+        uint256 calldataLength = msg.data.length;
+        uint256 contextSuffixLength = _contextSuffixLength();
+        if (isTrustedForwarder(msg.sender) && calldataLength >= contextSuffixLength) {
+            return address(bytes20(msg.data[calldataLength - contextSuffixLength:]));
+        } else {
+            return super._msgSender();
+        }
+    }
+
+    /**
+     * @dev Override for `msg.data`. Defaults to the original `msg.data` whenever
+     * a call is not performed by the trusted forwarder or the calldata length is less than
+     * 20 bytes (an address length).
+     */
+    function _msgData() internal view virtual override returns (bytes calldata) {
+        uint256 calldataLength = msg.data.length;
+        uint256 contextSuffixLength = _contextSuffixLength();
+        if (isTrustedForwarder(msg.sender) && calldataLength >= contextSuffixLength) {
+            return msg.data[:calldataLength - contextSuffixLength];
+        } else {
+            return super._msgData();
+        }
+    }
+
+    /**
+     * @dev ERC-2771 specifies the context as being a single address (20 bytes).
+     */
+    function _contextSuffixLength() internal view virtual returns (uint256) {
+        return 20;
+    }
+
 
 }
