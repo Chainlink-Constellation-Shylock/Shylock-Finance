@@ -5,12 +5,13 @@ import {LinkTokenInterface} from "@chainlink/contracts/interfaces/LinkTokenInter
 import {Client} from "@chainlink/contracts-ccip/ccip/libraries/Client.sol";
 import {CCIPReceiver} from "@chainlink/contracts-ccip/ccip/applications/CCIPReceiver.sol";
 import {IERC20} from "@chainlink/contracts-ccip/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
-import {CCIPMessageManager} from "./CCIPMessageManager.sol";
 
-contract CTokenPool is CCIPMessageManager {
-    uint64 immutable public destinationChain;
+
+contract CTokenPool {
     IERC20 immutable public token;
-    address immutable public cTokenAddress;
+
+    uint64 immutable public destinationChain;
+    address immutable public ccipGateWay;
 
     mapping(address => uint256) public deposits;   // Depsitor Address => amount
     mapping(address => uint256) public borrowings; // Borrower Address => amount
@@ -24,52 +25,36 @@ contract CTokenPool is CCIPMessageManager {
         cTokenAddress = destinationAddress;
     }
 
-    function _ccipReceive(
-        Client.Any2EVMMessage memory message
-    ) internal override {
-        bytes32 messageId = message.messageId; // fetch the message id
-        address sender = abi.decode(message.sender, (address)); // abi-decoding of the sender address
+    function doTransferOut(uint256 amount, address fromAddress, address toAddress) public {
+        require(amount > 0, "Amount must be greater than 0");
+        require(deposits[fromAddress] >= amount, "Not enough tokens to transfer");
 
-        // Get the message data.
-        bytes memory data = message.data;
+        deposits[fromAddress] -= amount;
 
-        // Store the message details.
-        messageDetail[messageId] = MessageIn({
-            sourceChainSelector: message.sourceChainSelector,
-            sender: sender,
-            data: data
-        });
-
-        // Add the message ID to the array of received messages.
-        receivedMessages.push(messageId);
-
-        // TODO: Emit an event with the message details.
-
-        (
-            bytes32 functionSelector,
-            bytes32 data2,
-            bytes32 data3,
-            bytes32 data4
-        ) = decodePayload(data);
-
-        if (functionSelector == stringToBytes32("doTransferOut")) {
-            uint256 amount = uint256(data2);
-            address fromAddress = sender;
-            address toAddress = address(uint160(uint256(data3)));
-
-            doTransferOut(amount, fromAddress, toAddress);
-        } else {
-            revert("Invalid function selector");
-        }
+        require(token.transfer(toAddress, amount), "Transfer failed");
     }
 
+    function borrow(uint256 amount, address borrower) public {
+        require(amount > 0, "Amount must be greater than 0");
+        require(deposits[borrower] >= amount, "Not enough tokens to borrow");
+
+        deposits[borrower] -= amount;
+        borrowings[borrower] += amount;
+
+        require(token.transfer(borrower, amount), "Transfer failed");
+    }
+
+    /* Message Sending */
     function addDaoReserve(uint256 amount) external payable {
         require(amount > 0, "Amount must be greater than 0");
         require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         deposits[msg.sender] += amount;
 
-        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("addDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
+        bytes4 functionSelector = bytes4(keccak256("addDaoReserve(uint,address)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
+
+        require(sendMessage(destinationChain, ccipGateWay, data) != 0, "addDaoReserve message sending Failed");
     }
 
     function addMemberReserve(address dao, uint256 amount) external payable {
@@ -78,16 +63,10 @@ contract CTokenPool is CCIPMessageManager {
 
         deposits[msg.sender] += amount;
 
-        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("addMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Deposit message sending Failed");
-    }
+        bytes4 functionSelector = bytes4(keccak256("addMemberReserve(address,uint,address)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
 
-    function doTransferOut(uint256 amount, address fromAddress, address toAddress) public {
-        require(amount > 0, "Amount must be greater than 0");
-        require(deposits[fromAddress] >= amount, "Not enough tokens to transfer");
-
-        deposits[fromAddress] -= amount;
-
-        require(token.transfer(toAddress, amount), "Transfer failed");
+        require(sendMessage(destinationChain, ccipGateWay, data) != 0, "addMemberReserve message sending Failed");
     }
     
     function withdrawDaoReserve(uint256 amount) public {
@@ -98,7 +77,10 @@ contract CTokenPool is CCIPMessageManager {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("withdrawDaoReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
+        bytes4 functionSelector = bytes4(keccak256("withdrawDaoReserve(uint,address)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, amount, msg.sender);
+        
+        require(sendMessage(destinationChain, ccipGateWay, data, "Withdraw message sending Failed"));
     }
 
     function withdrawMemberReserve(address dao, uint256 amount) public {
@@ -109,6 +91,9 @@ contract CTokenPool is CCIPMessageManager {
 
         require(token.transfer(msg.sender, amount), "Transfer failed");
 
-        require(sendMessage(destinationChain, cTokenAddress, stringToBytes32("withdrawMemberReserve"), bytes32(amount), bytes32(0)) != 0, "Withdraw message sending Failed");
+        bytes4 functionSelector = bytes4(keccak256("withdrawMemberReserve(address,uint,address)"));
+        bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount, msg.sender);
+        
+        require(sendMessage(destinationChain, ccipGateWay, data, "Withdraw message sending Failed"));
     }
 }
