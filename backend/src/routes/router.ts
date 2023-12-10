@@ -29,12 +29,14 @@ router.get('/:dao/:username', async (req: Request, res: Response, next) => {
             }
         );
 
-        makeRequestForSnapshotFuji(dao, userAddr).then(() => {
+        try {
+            await makeRequestForSnapshotFuji(dao, userAddr);
             console.log("Request for snapshot point sent");
-            makeRequestForUniswapFuji(userAddr).then(() => {
-                console.log("Request for uniswap point sent");
-            })
-        });
+            await makeRequestForUniswapFuji(userAddr);
+            console.log("Request for uniswap point sent");
+        } catch (innerError) {
+            console.error('Error making external requests:', innerError);
+        }
     } catch (error) {
         console.error(error);
         next(error);
