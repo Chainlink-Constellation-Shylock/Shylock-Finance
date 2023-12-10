@@ -26,7 +26,7 @@ contract ShylockCErc20Crosschain is ShylockCErc20, CCIPMessageManager {
         bytes32 data2 = bytes32(amount);
         bytes32 data3 = bytes32(uint256(uint160(to)));
 
-        sendMessage(destinationChainSelector, tokenPoolAddress, functionSelector, data2, data3, bytes32(0));
+        sendMessage(destinationChainSelector, tokenPoolAddress, functionSelector, data2, data3);
     }
 
     // function doTransferIn(address from, address to, uint amount) internal override(CErc20, CToken){
