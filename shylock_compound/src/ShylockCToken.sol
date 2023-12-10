@@ -15,6 +15,7 @@ import "./utils/SimpleERC2771Context.sol";
 
 
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771Context {
+    
     function getAccountGuarantee(address account) public view returns (uint) {
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
