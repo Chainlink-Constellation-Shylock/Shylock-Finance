@@ -1,64 +1,56 @@
-import { TabsContent } from "../ui/tabs";
-import { useState } from "react";
-import { useWeb3ModalAccount } from '@web3modal/ethers5/react';
+
+import { useState, useEffect } from 'react';
+import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
+import { ethers } from 'ethers';
+import { getChainName } from '@/app/utils/getChainName';
 
 export default function RepayBox() {
-  const { address } = useWeb3ModalAccount();
-  const [daoScore, setDaoScore] = useState(0);
-  const [reputationScore, setReputationScore] = useState(0);
+  const [repayAmount, setRepayAmount] = useState('');
+  const [defaultCurrency, setDefaultCurrency] = useState('ETH');
+  const { address, chainId, isConnected } = useWeb3ModalAccount();
+  const { walletProvider } = useWeb3ModalProvider();
 
-  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  useEffect(() => {
+    const chainName = getChainName(chainId ?? 0);
+    const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
+    setDefaultCurrency(currency);
+  }, [chainId]);
 
-  const getDaoScore = async () => {
-    setIsButtonDisabled(true); // Disable the button
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + "/uniswapgovernance.eth/" + address);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log(data);
-      const daoScore = (data.snapshot + data.uniswap) / 2;
-      setDaoScore(daoScore);
-      setReputationScore(50);
-    } catch (error) {
-      console.error("Failed to fetch DAO score:", error);
-      setDaoScore(0);
-      setReputationScore(0);
-    } finally {
-      setTimeout(() => setIsButtonDisabled(false), 30000); // Re-enable the button after 30 seconds
-    }
+
+  const handleInputChange = (e: any) => {
+    setRepayAmount(e.target.value);
+    console.log(defaultCurrency);
   };
 
-  const buttonStyle = isButtonDisabled
-    ? "bg-gray-400 text-white px-4 py-2 mt-4 rounded-md"
-    : "bg-[#755f44] text-white px-4 py-2 mt-4 rounded-md";
+  const handleBorrow = (e: any) => {
+    e.preventDefault();
+    console.log(`Depositing ${repayAmount} ${defaultCurrency}`);
+
+    // Add here the logic to interact with your smart contract or backend service
+  };
 
   return (
-    <div>
-      <TabsContent>
-        <div className="flex items-center justify-between m-2">
-          <p>Your DAO Activity Points:</p>
-          <p>{daoScore} / 100</p>
+    <div className='w-full'>
+      <form onSubmit={handleBorrow}>
+        <div className="mb-4 w-full">
+          <label htmlFor="repayAmount" className="block text-gray-700 text-sm font-bold mb-2">
+            Repay Amount ({defaultCurrency}):
+          </label>
+          <input
+            type="number"
+            id="repayAmount"
+            value={repayAmount}
+            onChange={handleInputChange}
+            placeholder={`Enter amount in ${defaultCurrency}`}
+            min="0"
+            step="0.00001"
+            className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
         </div>
-        <div className="flex items-center justify-between m-2">
-          <p>Your Reputation Points:</p>
-          <p>{reputationScore} / 100</p>
-        </div>
-        <p className="text-sm text-gray-600 mt-4">
-          ℹ️ Disclaimer: This is for test purpose, to calculate your score based on your activity on Uniswap. 
-        </p>
-        <p className="text-sm text-gray-600">
-          You <b>CANNOT</b> borrow money from Shylock Finance with this score.
-        </p>
-        <button 
-          className={buttonStyle}
-          onClick={getDaoScore}
-          disabled={isButtonDisabled}
-        >
-          {isButtonDisabled ? "Wait for a sec..." : "Check My Score"}
+        <button type="submit" className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          Repay
         </button>
-      </TabsContent>
+      </form>
     </div>
-  )
+  );
 }

@@ -6,7 +6,7 @@ export default function Dashboard() {
       <section className="w-full py-12 md:py-32 lg:py-32 xl:py-8">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 md:space-y-4 lg:space-y-12 text-left">
-            <h1 className="text-2xl font-bold">Status</h1>
+            <h1 className="text-2xl font-bold">Your Status in DAOs</h1>
             <StatBox />
           </div>
         </div>

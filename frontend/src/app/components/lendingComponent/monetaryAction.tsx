@@ -2,6 +2,7 @@
 
 import { TabsList, Tabs } from "@/app/components/ui/tabs"
 import { useState } from "react"
+import { useWeb3ModalAccount } from '@web3modal/ethers5/react';
 
 import LendBox from "./ssDepositBox";
 import BorrowBox from "./ssBorrowBox";
@@ -11,6 +12,8 @@ import { CardContent, Card } from "@/app/components/ui/card";
 
 export default function MonetaryActionComponent() {
     const [activeTab, setActiveTab] = useState("Deposit");
+
+    const { isConnected } = useWeb3ModalAccount();
 
     const isDeposit = activeTab === "Deposit";
     const isWithdraw = activeTab === "Withdraw";
@@ -63,12 +66,20 @@ export default function MonetaryActionComponent() {
                     </button>
                 </TabsList>
                 <Card className="w-full p-8 rounded-lg shadow-md text-[#755f44] border-[#a67b5b] bg-white shadow-[0px_0px_8px_rgba(0,0,0,0.1)] relative overflow-hidden">
-                    <CardContent className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+                    <CardContent className="w-4/5 h-4/5 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
                     <>
-                        {isDeposit && (<LendBox />)}
-                        {isWithdraw && (<WithdrawBox />)}
-                        {isBorrow && (<BorrowBox />)}
-                        {isRepay && (<RepayModal />) }
+                        {isConnected && isDeposit && (<LendBox />)}
+                        {isConnected && isWithdraw && (<WithdrawBox />)}
+                        {isConnected && isBorrow && (<BorrowBox />)}
+                        {isConnected && isRepay && (<RepayModal />) }
+                        {!isConnected && (
+                            <div className="flex-1 pl-4">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-medium font-bold mt-2">Connect Wallet to continue</p>
+                                </div>
+                            </div>
+                        
+                        )}
                     </>
                     </CardContent>
                 </Card>
