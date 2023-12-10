@@ -17,17 +17,22 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
     }
 
     function addDaoReserve(uint reserveAmount) external returns (uint) {
-        addDaoReserveInternal(reserveAmount, 0);
+        addDaoReserveInternal(reserveAmount);
         return NO_ERROR;
     }
 
     function addMemberReserve(address dao, uint reserveAmount) external returns (uint) {
-        addMemberReserveInternal(dao, reserveAmount, 0);
+        addMemberReserveInternal(dao, reserveAmount);
         return NO_ERROR;
     }
 
     function withdrawDaoReserve(uint withdrawAmount) external returns (uint) {
-        withdrawDaoReserveInternal(withdrawAmount, 0);
+        withdrawDaoReserveInternal(withdrawAmount);
+        return NO_ERROR;
+    }
+
+    function withdrawMemberReserve(address dao, uint withdrawAmount) external returns (uint) {
+        withdrawMemberReserveInternal(dao, withdrawAmount);
         return NO_ERROR;
     }
 
@@ -36,7 +41,7 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
     }
 
     function borrow(address dao, uint dueTimestamp, uint borrowAmount) external returns (uint) {
-        borrowInternal(dao, dueTimestamp, borrowAmount, 0);
+        borrowInternal(dao, dueTimestamp, borrowAmount);
         return NO_ERROR;
     }
 }
