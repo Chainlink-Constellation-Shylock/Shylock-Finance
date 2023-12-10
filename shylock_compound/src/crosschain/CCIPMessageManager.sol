@@ -49,6 +49,43 @@ abstract contract CCIPMessageManager is CCIPReceiver {
         linkToken = LinkTokenInterface(link);
     }
 
+    function sendMessage(
+        address receiverAddress,
+        bytes32 functionSelector,
+        bytes32 data2,
+        bytes32 data3
+    ) internal returns (bytes32 messageId) {
+        bytes32 senderAddress = addressToBytes32(address(this));
+        bytes memory data = abi.encode(functionSelector, senderAddress, data2, data3);
+
+        Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
+            receiver: abi.encode(receiverAddress), // ABI-encoded receiver contract address
+            data: data,
+            tokenAmounts: new Client.EVMTokenAmount[](0),
+            extraArgs: Client._argsToBytes(
+                Client.EVMExtraArgsV1({gasLimit: 200_000, strict: false}) // Additional arguments, setting gas limit and non-strict sequency mode
+            ),
+            feeToken: address(linkToken) // Setting feeToken to LinkToken address, indicating LINK will be used for fees
+        });
+
+        // Initialize a router client instance to interact with cross-chain router
+        IRouterClient router = IRouterClient(this.getRouter());
+
+        // Get the fee required to send the message. Fee paid in LINK.
+        uint256 fees = router.getFee(destinationChain, evm2AnyMessage);
+
+        // Approve the Router to pay fees in LINK tokens on contract's behalf.
+        linkToken.approve(address(router), fees);
+
+        // Send the message through the router and store the returned message ID
+        messageId = router.ccipSend(destinationChain, evm2AnyMessage);
+
+        // TODO: Emit an event with message details
+
+        // Return the message ID
+        return messageId;
+    }
+
     function getLatestMessageDetails()
         public
         view
