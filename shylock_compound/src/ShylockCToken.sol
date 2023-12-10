@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
 
-import "./CToken.sol";
-import "./ShylockCTokenInterfaces.sol";
-import "./ShylockComptrollerInterface.sol";
-import "./ShylockComptrollerStorage.sol";
+import "./compound/CToken.sol";
+import "./interface/ShylockCTokenInterfaces.sol";
+import "./interface/ShylockComptrollerInterface.sol";
+import "./interface/ShylockComptrollerStorage.sol";
 
 /**
  * @title Shylock Finance's CToken Contract

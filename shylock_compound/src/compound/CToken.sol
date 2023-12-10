@@ -6,7 +6,7 @@ import "./ErrorReporter.sol";
 import "./EIP20Interface.sol";
 import "./InterestRateModel.sol";
 import "./ExponentialNoError.sol";
-import "./ShylockComptrollerInterface.sol";
+import "../interface/ShylockComptrollerInterface.sol";
 
 /**
  * @title Compound's CToken Contract

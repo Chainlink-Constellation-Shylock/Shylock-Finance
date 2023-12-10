@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
 
-import "./CErc20.sol";
+import "./compound/CErc20.sol";
 import "./ShylockCToken.sol";
 
 /**

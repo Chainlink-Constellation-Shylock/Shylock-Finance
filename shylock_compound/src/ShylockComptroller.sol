@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity ^0.8.10;
 
-import "./Comptroller.sol";
-import "./ShylockComptrollerStorage.sol";
-import "./ShylockComptrollerInterface.sol";
+import "./compound/Comptroller.sol";
+import "./interface/ShylockComptrollerStorage.sol";
+import "./interface/ShylockComptrollerInterface.sol";
 
 /**
  * @title Shylock Finance's Comptroller Contract
