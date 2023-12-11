@@ -4,4 +4,6 @@ out = "out"
 libs = ["lib"]
 ignoredErrorCodes = [5667, 2018, 2462, 2072, 2519, 3628, 9302]
 
+[rpc_endpoints]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

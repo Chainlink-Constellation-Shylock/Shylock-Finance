@@ -22,7 +22,7 @@ contract CTokenPool {
     // event Deposited(address indexed user, address indexed token, uint256 amount);
     // event Withdrawed(address indexed user, address indexed token, uint256 amount);
 
-    constructor(address tokenAddress, CcipGatewayInterface _ccipGateway, address destinationAddress) {
+    constructor(address tokenAddress, CcipGatewayInterface _ccipGateway) {
         token = IERC20(tokenAddress);
         ccipGateWay = _ccipGateway;
     }

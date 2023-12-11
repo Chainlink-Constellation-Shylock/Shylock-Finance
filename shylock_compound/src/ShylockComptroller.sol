@@ -19,7 +19,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         _;
     }
 
-    function setGovernanceContract(ShylockGovernanceInterface _governanceContract) external {
+    function setGovernanceContract(ShylockGovernanceInterface _governanceContract) override external {
         require(msg.sender == admin, "only admin can set governance contract");
         governanceContract = _governanceContract;
     }
