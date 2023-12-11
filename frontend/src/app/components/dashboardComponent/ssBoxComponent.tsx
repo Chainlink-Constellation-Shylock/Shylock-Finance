@@ -1,5 +1,6 @@
 import { CardHeader, CardContent, Card } from "@/app/components/ui/card";
 import DAOTabComponent from "./ssDaoScore";
+import QRCodeGenerator from "./ssQRGenerator";
 
 function StatBox() {
   return (
@@ -26,16 +27,16 @@ function DIDBox() {
         </CardHeader>
         <CardContent className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
           <div className="flex-1 pl-4">
-              <div className="flex items-center justify-between">
-                <p>Get Your DID through Polygon ID</p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-medium font-bold">Get Your DID through Polygon ID</p>
               </div>
-              <button className="bg-[#755f44] text-white px-4 py-2 mt-4 rounded-md">Get Polygon ID</button>
+              <QRCodeGenerator />
           </div>
           <div className="flex-1 pl-4">
-            <div className="flex items-center justify-between">
-              <p>Get Verified</p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-medium font-bold">Get Verified</p>
             </div>
-            <button className="bg-[#755f44] text-white px-4 py-2 mt-4 rounded-md">Verify Your DID</button>
+            <button className="bg-[#755f44] text-white px-4 py-2 mt-14 rounded-md">Verify Your DID</button>
           </div>
         </CardContent>
       </Card>

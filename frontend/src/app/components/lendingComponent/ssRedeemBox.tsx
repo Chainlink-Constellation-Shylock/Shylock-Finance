@@ -4,10 +4,11 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { getMockERC20Address } from '@/app/utils/getAddress';
+import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
+
 
 export default function LendBox() {
-  const [withdrawAmount, setwithdrawAmount] = useState('');
+  const [redeemAmount, setredeemAmount] = useState('');
   const [defaultCurrency, setDefaultCurrency] = useState('ETH');
   const [selectedToken, setSelectedToken] = useState('ETH');
   const [showTokenList, setShowTokenList] = useState(false);
@@ -15,7 +16,7 @@ export default function LendBox() {
   const { walletProvider } = useWeb3ModalProvider();
 
   const mockERC20Address = getMockERC20Address();
-
+  const daoAddress = getDaoAddress();
   useEffect(() => {
     const chainName = getChainName(chainId ?? 0);
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
@@ -24,10 +25,10 @@ export default function LendBox() {
   }, [chainId]);
 
   const handleInputChange = (e: any) => {
-    setwithdrawAmount(e.target.value);
+    setredeemAmount(e.target.value);
   };
 
-  const handleWithdraw = async (e: any) => {
+  const handleRedeem = async (e: any) => {
     e.preventDefault();
 
     if (!walletProvider || !isConnected) {
@@ -39,19 +40,19 @@ export default function LendBox() {
       // Connect to the network
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
-      
+
       const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
 
-      const tx = await contract.redeem(ethers.utils.parseUnits(withdrawAmount));
+      const tx = await contract.withdrawMemberReserve(daoAddress, ethers.utils.parseUnits(redeemAmount));
 
-      console.log(`Withdrawing ${withdrawAmount} ${selectedToken}`);
+      console.log(`Redeeming ${redeemAmount} ${selectedToken}`);
       console.log('Transaction:', tx);
 
       // Wait for the transaction to be mined
       await tx.wait();
-      console.log('Withdraw transaction completed');
+      console.log('Redeem transaction completed');
     } catch (error) {
-      console.error('Error during withdraw transaction:', error);
+      console.error('Error during redeem transaction:', error);
     }
   };
 
@@ -66,10 +67,10 @@ export default function LendBox() {
 
   return (
     <div className='w-full'>
-      <form onSubmit={handleWithdraw}>
+      <form onSubmit={handleRedeem}>
         <div className="mb-4">
           <label className="block text-gray-700 text-medium font-bold mb-2">
-            Withdraw and Earn Interest
+            Redeem and Earn Interest
           </label>
           <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -98,13 +99,13 @@ export default function LendBox() {
         )}
         </div>
         <div className="mb-4 w-full">
-          <label htmlFor="withdrawAmount" className="block text-gray-700 text-sm font-bold mb-2">
-            Withdraw Amount ({selectedToken}):
+          <label htmlFor="redeemAmount" className="block text-gray-700 text-sm font-bold mb-2">
+            Redeem Amount ({selectedToken}):
           </label>
           <input
             type="number"
-            id="withdrawAmount"
-            value={withdrawAmount}
+            id="redeemAmount"
+            value={redeemAmount}
             onChange={handleInputChange}
             placeholder={`Enter amount in ${selectedToken}`}
             min="0"
@@ -112,8 +113,8 @@ export default function LendBox() {
             className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <button onClick={() => handleWithdraw(withdrawAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          Withdraw
+        <button onClick={() => handleRedeem(redeemAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          Redeem
         </button>
       </form>
     </div>

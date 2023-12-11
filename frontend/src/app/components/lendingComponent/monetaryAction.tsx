@@ -1,19 +1,22 @@
 "use client"
 
 import { TabsList, Tabs } from "@/app/components/ui/tabs"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useWeb3ModalAccount } from '@web3modal/ethers5/react';
 
 import LendBox from "./ssDepositBox";
+import AddCollateralBox from "./ssAddCollateralBox";
 import BorrowBox from "./ssBorrowBox";
 import RepayModal from "./ssRepayBox";
 import WithdrawBox from "./ssWithdrawBox";
+import RedeemBox from "./ssRedeemBox";
 import { CardContent, Card } from "@/app/components/ui/card";
 
 export default function MonetaryActionComponent() {
     const [activeTab, setActiveTab] = useState("Deposit");
+    const [isComponentMounted, setIsComponentMounted] = useState(false);
 
-    const { isConnected } = useWeb3ModalAccount();
+    const { isConnected, chainId } = useWeb3ModalAccount();
 
     const isDeposit = activeTab === "Deposit";
     const isWithdraw = activeTab === "Withdraw";
@@ -34,6 +37,16 @@ export default function MonetaryActionComponent() {
 
     const handleRepayTab = () => {
         setActiveTab('Repay');
+    }
+
+    const isPolygonZkEVMTestnet = chainId === 1442;
+
+    useEffect(() => {
+        setIsComponentMounted(true);
+    }, []);
+
+    if (!isComponentMounted) {
+        return <div>Loading...</div>;
     }
 
     return (
@@ -67,11 +80,36 @@ export default function MonetaryActionComponent() {
                 </TabsList>
                 <Card className="w-full p-8 rounded-lg shadow-md text-[#755f44] border-[#a67b5b] bg-white shadow-[0px_0px_8px_rgba(0,0,0,0.1)] relative overflow-hidden">
                     <CardContent className="w-4/5 h-4/5 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
-                    <>
-                        {isConnected && isDeposit && (<LendBox />)}
-                        {isConnected && isWithdraw && (<WithdrawBox />)}
-                        {isConnected && isBorrow && (<BorrowBox />)}
-                        {isConnected && isRepay && (<RepayModal />) }
+                    <div className="w-full">
+                        {isConnected && isPolygonZkEVMTestnet && (
+                            <div className="flex flex-row justify-between">
+                                <div className="mr-25">
+                                    <p>Coming Soon...</p>
+                                </div>
+                            </div>
+                        )}
+                        {isConnected && isDeposit && !isPolygonZkEVMTestnet && (
+                            <div className="flex flex-row justify-between">
+                                <div className="mr-25">
+                                    <LendBox />
+                                </div>
+                                <div className="">
+                                    <AddCollateralBox />
+                                </div>
+                            </div>
+                        )}
+                        {isConnected && isWithdraw && !isPolygonZkEVMTestnet && (
+                            <div className="flex flex-row justify-between">
+                                <div className="mr-25">
+                                    <WithdrawBox />
+                                </div>
+                                <div className="">
+                                    <RedeemBox />
+                                </div>
+                            </div>
+                        )}
+                        {isConnected && isBorrow && !isPolygonZkEVMTestnet && (<BorrowBox />)}
+                        {isConnected && isRepay && !isPolygonZkEVMTestnet && (<RepayModal />) }
                         {!isConnected && (
                             <div className="flex-1 pl-4">
                                 <div className="flex items-center justify-between">
@@ -80,7 +118,7 @@ export default function MonetaryActionComponent() {
                             </div>
                         
                         )}
-                    </>
+                    </div>
                     </CardContent>
                 </Card>
                 
