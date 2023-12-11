@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
 import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
-
+import { toast } from 'react-toastify';
 
 export default function LendBox() {
   const [redeemAmount, setredeemAmount] = useState('');
@@ -42,7 +42,16 @@ export default function LendBox() {
       const signer = provider.getSigner();
 
       const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
-
+      toast.info('Redeeming...', {
+        position: "top-right",
+        autoClose: 15000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
       const tx = await contract.withdrawMemberReserve(daoAddress, ethers.utils.parseUnits(redeemAmount));
 
       console.log(`Redeeming ${redeemAmount} ${selectedToken}`);
@@ -51,6 +60,16 @@ export default function LendBox() {
       // Wait for the transaction to be mined
       await tx.wait();
       console.log('Redeem transaction completed');
+      toast.success(`Success! Here is your transaction:${tx.receipt.transactionHash} `, {
+        position: "top-right",
+        autoClose: 18000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        });
     } catch (error) {
       console.error('Error during redeem transaction:', error);
     }

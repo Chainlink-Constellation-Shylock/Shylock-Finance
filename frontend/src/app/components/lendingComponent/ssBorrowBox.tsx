@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
 import { getMockERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
-
+import { toast } from 'react-toastify';
 
 export default function LendBox() {
   const [borrowAmount, setBorrowAmount] = useState('');
@@ -44,6 +44,16 @@ export default function LendBox() {
         ShylockCErc20Abi,
         signer
       );
+      toast.info('Borrowing...', {
+        position: "top-right",
+        autoClose: 15000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
       const tx = await shylockCMockERC20.borrow(
         daoAddress,
         // 3 weeks from now
@@ -51,8 +61,17 @@ export default function LendBox() {
         ethers.utils.parseEther(borrowAmount)
       );
       await tx.wait();
-      const timestamp = await getCurrentTimestamp();
       console.log('Borrow transaction completed');
+      toast.success(`Success! Here is your transaction:${tx.receipt.transactionHash} `, {
+        position: "top-right",
+        autoClose: 18000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        });
     } catch (error) {
       console.error('Error during deposit transaction:', error);
     }

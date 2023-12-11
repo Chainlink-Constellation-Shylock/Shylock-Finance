@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
-import { getMockERC20Address } from '@/app/utils/getAddress';
+import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
+import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
+import { toast } from 'react-toastify';
 
 export default function LendBox() {
-  const [repayAmount, setRepayAmount] = useState('');
+  const [repayAmount, setrepayAmount] = useState('');
   const [defaultCurrency, setDefaultCurrency] = useState('ETH');
   const [selectedToken, setSelectedToken] = useState('ETH');
   const [showTokenList, setShowTokenList] = useState(false);
@@ -14,7 +16,7 @@ export default function LendBox() {
   const { walletProvider } = useWeb3ModalProvider();
 
   const mockERC20Address = getMockERC20Address();
-
+  const daoAddress = getDaoAddress();
   useEffect(() => {
     const chainName = getChainName(chainId ?? 0);
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
@@ -23,13 +25,54 @@ export default function LendBox() {
   }, [chainId]);
 
   const handleInputChange = (e: any) => {
-    setRepayAmount(e.target.value);
+    setrepayAmount(e.target.value);
   };
 
-  const handleRepay = (e: any) => {
+  const handleRepay = async (e: any) => {
     e.preventDefault();
-    console.log(`Repaying ${repayAmount} ${selectedToken}`);
-    // Add your smart contract interaction logic here
+
+    if (!walletProvider || !isConnected) {
+      console.log('Wallet not connected');
+      return;
+    }
+
+    try {
+      // Connect to the network
+      const provider = new ethers.providers.Web3Provider(walletProvider);
+      const signer = provider.getSigner();
+
+      const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
+      toast.info('Repaying...', {
+        position: "top-right",
+        autoClose: 15000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
+      const tx = await contract.repayBorrow(ethers.utils.parseUnits(repayAmount));
+
+      console.log(`Repaying ${repayAmount} ${selectedToken}`);
+      console.log('Transaction:', tx);
+
+      // Wait for the transaction to be mined
+      await tx.wait();
+      console.log('Repay transaction completed');
+      toast.success(`Success! Here is your transaction:${tx.receipt.transactionHash} `, {
+        position: "top-right",
+        autoClose: 18000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        });
+    } catch (error) {
+      console.error('Error during repay transaction:', error);
+    }
   };
 
   const toggleTokenList = () => {
@@ -45,6 +88,10 @@ export default function LendBox() {
     <div className='w-full'>
       <form onSubmit={handleRepay}>
         <div className="mb-4">
+          <label className="block text-gray-700 text-medium font-bold mb-2">
+            Repay and Earn Interest
+          </label>
+          <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Select Token:
           </label>
@@ -85,7 +132,7 @@ export default function LendBox() {
             className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <button type="submit" className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        <button onClick={() => handleRepay(repayAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Repay
         </button>
       </form>
