@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-3a9435c5-d13d-4b20-af6b-157fed9b8af1" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" width="113.44" height="130.98" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 113.44 130.98">
+  <defs>
+    <linearGradient id="uuid-f7366f81-ab84-4a8f-858c-fb7174b45016" x1="70.9" y1="8.18" x2="28.36" y2="81.86" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7790e2"/>
+      <stop offset="1" stop-color="#486ddc"/>
+    </linearGradient>
+    <linearGradient id="uuid-c42cf2ea-be61-4bd2-b69f-5502e1da9629" x1="85.08" y1="49.23" x2="42.59" y2="122.83" xlink:href="#uuid-f7366f81-ab84-4a8f-858c-fb7174b45016"/>
+  </defs>
+  <g id="uuid-3f86f7fb-f16b-4957-ac05-fd73d7b303fa" data-name="Layer 1">
+    <g>
+      <polygon points="56.72 0 0 32.74 0 65.49 28.36 49.12 28.36 49.12 56.72 32.74 85.08 49.12 85.08 49.12 113.44 32.74 113.44 32.74 56.72 0" style="fill: url(#uuid-f7366f81-ab84-4a8f-858c-fb7174b45016);"/>
+      <polygon points="113.44 65.6 56.72 98.35 56.72 98.23 28.46 81.92 .1 98.3 13.02 105.76 56.72 130.98 100.42 105.76 113.44 98.24 113.44 65.6" style="fill: url(#uuid-c42cf2ea-be61-4bd2-b69f-5502e1da9629);"/>
+      <polygon points="85.08 81.86 85.08 49.12 56.72 32.75 28.36 49.12 28.36 81.86 56.72 98.24 85.08 81.86" style="fill: #0c162c;"/>
+    </g>
+  </g>
+</svg>

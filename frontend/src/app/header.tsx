@@ -16,6 +16,12 @@ export default function Header() {
         <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="/lending">
           Lending
         </Link>
+        <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="#">
+          Governance
+        </Link>
+        <Link className="text-sm font-medium hover:bg-[#eeeeee] px-4 py-2 rounded-md text-[#755f44]" href="#">
+          Liquidation
+        </Link>
         <ConnectButton />
       </nav>
     </header>

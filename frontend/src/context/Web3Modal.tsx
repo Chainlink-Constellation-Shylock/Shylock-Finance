@@ -3,7 +3,7 @@ import React from 'react';
 import { createWeb3Modal, defaultConfig } from '@web3modal/ethers5/react'
 
 // 1. Get projectId
-const projectId = '1234'
+const projectId = process.env.NEXT_PUBLIC_PROJECT_ID ?? "";
 
 // 2. Set chains
 const avaFujiTestnet = {
@@ -11,7 +11,7 @@ const avaFujiTestnet = {
   name: 'Avalanche Fuji Testnet',
   currency: 'AVAX',
   explorerUrl: 'https://testnet.snowtrace.io/',
-  rpcUrl: 'https://api.avax-test.network/'
+  rpcUrl: process.env.NEXT_PUBLIC_FUJI_RPC ?? 'https://api.avax-test.network/'
 }
 
 const polygonZkEVMTestnet = {
@@ -34,8 +34,8 @@ const ethereumSepoliaTestnet = {
 const metadata = {
   name: 'Shylock Finance',
   description: 'Multichain Undercollateralized Lending Protocol for DAO participants',
-  url: 'https://mywebsite.com',
-  icons: ['https://avatars.mywebsite.com/']
+  url: 'http://localhost:3001',
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
 createWeb3Modal({

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.10;
 
 import "./compound/Comptroller.sol";
-import "./interface/ShylockComptrollerStorage.sol";
-import "./interface/ShylockComptrollerInterface.sol";
+import "./interfaces/ShylockComptrollerStorage.sol";
+import "./interfaces/ShylockComptrollerInterface.sol";
 
 /**
  * @title Shylock Finance's Comptroller Contract
@@ -24,7 +24,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
         governanceContract = _governanceContract;
     }
 
-    function getAllAccountCtokenBalance(address account) override public returns (uint, uint) {
+    function getAllAccountCtokenBalance(address account) override external view returns (uint, uint) {
         uint totalBalance;
         uint assetBalance;
         uint oraclePriceMantissa;
@@ -39,7 +39,7 @@ contract ShylockComptroller is Comptroller, ShylockComptrollerInterface, Shylock
                 return (uint(Error.PRICE_ERROR), 0);
             }
             oraclePrice = Exp({mantissa: oraclePriceMantissa});
-            assetBalance = asset.balanceOfUnderlying(account);
+            assetBalance = asset.balanceOfUnderlyingNoGas(account);
             totalBalance = mul_ScalarTruncateAddUInt(oraclePrice, assetBalance, totalBalance);
         }
         

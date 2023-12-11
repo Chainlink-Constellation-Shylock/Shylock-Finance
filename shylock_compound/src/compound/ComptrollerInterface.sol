@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./CToken.sol";
+import "./PriceOracle.sol";
 
 abstract contract ComptrollerInterface {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
@@ -73,5 +74,6 @@ abstract contract ComptrollerInterface {
         uint repayAmount) virtual external view returns (uint, uint);
 
     function _supportMarket(CToken cToken) external virtual returns (uint256);
+    function _setPriceOracle(PriceOracle newOracle) external virtual returns (uint256);
 
 }

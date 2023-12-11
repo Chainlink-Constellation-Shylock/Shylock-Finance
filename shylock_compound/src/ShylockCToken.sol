@@ -2,9 +2,9 @@
 pragma solidity ^0.8.10;
 
 import "./compound/CToken.sol";
-import "./interface/ShylockCTokenInterfaces.sol";
-import "./interface/ShylockComptrollerInterface.sol";
-import "./interface/ShylockComptrollerStorage.sol";
+import "./interfaces/ShylockCTokenInterfaces.sol";
+import "./interfaces/ShylockComptrollerInterface.sol";
+import "./interfaces/ShylockComptrollerStorage.sol";
 import "./utils/SimpleERC2771Context.sol";
 
 /**
@@ -13,10 +13,16 @@ import "./utils/SimpleERC2771Context.sol";
  * @author Shylock Finance
  */
 
-
 abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771Context {
+    function balanceOfUnderlyingNoGas (address owner) public view returns (uint) {
+        Exp memory exchangeRate = Exp({mantissa: exchangeRateStored()});
+        return mul_ScalarTruncate(exchangeRate, accountTokens[owner]);
+    }
     
     function getAccountGuarantee(address account) public view returns (uint) {
+        if (shylockGuarantee[account].principal == 0) {
+            return 0;
+        }
         return shylockGuarantee[account].principal * borrowIndex / shylockGuarantee[account].interestIndex; 
     }
 
@@ -28,13 +34,12 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
 
         borrowContract memory borrowContract = borrowContracts[account][index];
 
-        if (borrowContract.principal == 0) {
-            revert BrrowContracNotExist();
-        }
-
+        // if (borrowContract.principal == 0) {
+        //     revert BrrowContracNotExist();
+        // }
         uint newPrincipal = borrowContract.principal * borrowIndex / borrowContract.interestIndex;
         uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(borrowContract.dao, account);
-        uint memberGuaranteeCollateral = div_(newPrincipal, memberCollateralRateMantissa);
+        uint memberGuaranteeCollateral = div_(newPrincipal, Exp({mantissa:memberCollateralRateMantissa}));
         uint totalGuaranteeCollateral = newPrincipal - memberGuaranteeCollateral;
         uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(borrowContract.dao);
         uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
@@ -142,7 +147,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
 
         
         uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
-        uint memberGuaranteeCollateral = div_(borrowAmount, memberCollateralRateMantissa);
+        uint memberGuaranteeCollateral = div_(borrowAmount, Exp({mantissa:memberCollateralRateMantissa}));
         uint totalGuaranteeCollateral = borrowAmount - memberGuaranteeCollateral;
         uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(dao);
         uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
@@ -188,10 +193,10 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
 
     function repayBorrowFresh(address payer, address dao, address borrower, uint repayAmount, uint index) internal returns (uint) {
         /* Fail if repayBorrow not allowed */
-        uint allowed = comptroller.repayBorrowAllowed(address(this), payer, borrower, repayAmount);
-        if (allowed != 0) {
-            revert RepayBorrowComptrollerRejection(allowed);
-        }
+        // uint allowed = comptroller.repayBorrowAllowed(address(this), payer, borrower, repayAmount);
+        // if (allowed != 0) {
+        //     revert RepayBorrowComptrollerRejection(allowed);
+        // }
 
         /* Verify market's block number equals current block number */
         if (accrualBlockNumber != getBlockNumber()) {
@@ -204,17 +209,14 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
         /* If repayAmount == -1, repayAmount = accountBorrows */
         uint repayAmountFinal = repayAmount == type(uint).max ? accountBorrowsPrev : repayAmount;
 
-        uint actualRepayAmount;
-        actualRepayAmount = doTransferIn(payer, repayAmountFinal);
+        uint actualRepayAmount = doTransferIn(payer, repayAmountFinal);
 
-        uint memberCollateralRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower);
-        uint memberGuaranteeCollateral = div_(actualRepayAmount, memberCollateralRateMantissa);
-        uint totalGuaranteeCollateral = actualRepayAmount - memberGuaranteeCollateral;
+        uint memberGuaranteeCollateral = div_(actualRepayAmount, Exp({mantissa: ShylockComptrollerStorage(address(comptroller)).governanceContract().getMemberCollateralRate(dao, borrower)}));
         uint protocolToDaoGuaranteeRateMantissa = ShylockComptrollerStorage(address(comptroller)).governanceContract().getProtocolToDaoGuaranteeRate(dao);
-        uint daoGuaranteeCollateral = div_(totalGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
+        uint daoGuaranteeCollateral = div_(actualRepayAmount - memberGuaranteeCollateral, add_(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), Exp({mantissa: mantissaOne})));
         uint protocolGuaranteeCollateral = mul_ScalarTruncate(Exp({mantissa: protocolToDaoGuaranteeRateMantissa}), daoGuaranteeCollateral);
-        memberGuaranteeCollateral = actualRepayAmount - daoGuaranteeCollateral - protocolGuaranteeCollateral;
 
+    
         shylockGuarantee[borrower].principal = getAccountGuarantee(borrower) - memberGuaranteeCollateral;
         shylockGuarantee[borrower].interestIndex = borrowIndex;
         shylockGuarantee[dao].principal = getAccountGuarantee(dao) - daoGuaranteeCollateral;
@@ -231,11 +233,11 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
         prevBorrowContract.protocolCollateral = nextBorrowContract.protocolCollateral - protocolGuaranteeCollateral;
         prevBorrowContract.interestIndex = borrowIndex;
 
-        if(prevBorrowContract.principal == 0 && prevBorrowContract.memberCollateral == 0 && prevBorrowContract.daoCollateral == 0 && prevBorrowContract.protocolCollateral == 0){
-            uint len = borrowContracts[borrower].length;
-            borrowContracts[borrower][index] = borrowContracts[borrower][len - 1];
-            borrowContracts[borrower].pop();
-        }
+        // if(prevBorrowContract.principal == 0 && prevBorrowContract.memberCollateral == 0 && prevBorrowContract.daoCollateral == 0 && prevBorrowContract.protocolCollateral == 0){
+        //     uint len = borrowContracts[borrower].length;
+        //     borrowContracts[borrower][index] = borrowContracts[borrower][len - 1];
+        //     borrowContracts[borrower].pop();
+        // }
 
         /* We write the previously calculated values into storage */
         accountBorrows[borrower].principal = accountBorrowsPrev - actualRepayAmount;
@@ -243,7 +245,7 @@ abstract contract ShylockCToken is CToken, ShylockCTokenInterface, SimpleERC2771
         totalBorrows = totalBorrows - actualRepayAmount;
 
         /* We emit a RepayBorrow event */
-        emit RepayBorrow(payer, borrower, actualRepayAmount, accountBorrowsPrev - actualRepayAmount, totalBorrows - actualRepayAmount);
+        emit RepayBorrow(payer, borrower, actualRepayAmount, accountBorrowsPrev - actualRepayAmount, totalBorrows);
 
         return actualRepayAmount;
     }

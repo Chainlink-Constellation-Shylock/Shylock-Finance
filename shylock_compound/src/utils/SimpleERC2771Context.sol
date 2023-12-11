@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
-import { ShylockCTokenStorage } from "../interface/ShylockCTokenInterfaces.sol";
+import { ShylockCTokenStorage } from "../interfaces/ShylockCTokenInterfaces.sol";
 
 abstract contract SimpleERC2771Context is ShylockCTokenStorage { 
     /**

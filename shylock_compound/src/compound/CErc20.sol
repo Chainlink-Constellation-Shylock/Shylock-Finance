@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./CToken.sol";
-import "../interface/ShylockComptrollerInterface.sol";
+import "../interfaces/ShylockComptrollerInterface.sol";
 
 interface CompLike {
     function delegate(address delegatee) external;
@@ -90,7 +90,7 @@ contract CErc20 is CToken, CErc20Interface {
      * @param repayAmount The amount to repay, or -1 for the full outstanding amount
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
-    function repayBorrow(uint repayAmount) override external returns (uint) {
+    function repayBorrow(uint repayAmount) virtual override external returns (uint) {
         repayBorrowInternal(repayAmount);
         return NO_ERROR;
     }

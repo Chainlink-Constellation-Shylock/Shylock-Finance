@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./CToken.sol";
-import "../interface/ShylockComptrollerInterface.sol";
+import "../interfaces/ShylockComptrollerInterface.sol";
 
 /**
  * @title Compound's CEther Contract

@@ -1,12 +1,12 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/security/PausableUpgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "../interfaces/ICEther.sol";
 import "../interfaces/ICERC20.sol";
 import "../interfaces/ILiquidity.sol";

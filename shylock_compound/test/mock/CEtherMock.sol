@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { ERC20Upgradeable, IERC20Upgradeable } from "@openzeppelin-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin-upgradeable/contracts/utils/AddressUpgradeable.sol";
+import { ERC20Upgradeable, IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import { CustomMath } from "../utils/CustomMath.sol";
-import { IERC20Upgradeable } from "@openzeppelin-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { ICEther } from "../interfaces/ICEther.sol";
 
 contract CEtherMock is ERC20Upgradeable, ICEther {
