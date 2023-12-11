@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "./ShylockCErc20.sol";
+import "./crosschain/ICcipGateway.sol";
 
 /**
  * @title Shylock Finance's Crosschain-CErc20 Contract
@@ -41,8 +42,6 @@ contract ShylockCErc20Crosschain is ShylockCErc20 {
 
         bytes memory data = abi.encodeWithSelector(functionSelector, to, amount);
 
-        (bool success, bytes memory returnData) = ccipGateWay.call(data);
-
-        require(success, "TOKEN_TRANSFER_OUT_FAILED");
+        CcipGatewayInterface(ccipGateWay).sendMessage(_msgSender(), data);
     }
 }
