@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
-import { getChainName } from '@/app/utils/getChainName';
-import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
+import { getChainName } from '../../utils/getChainName';
+import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
 import { ERC20Abi } from '@/app/utils/abi/erc20Abi';
 import { getMockERC20Address, getDaoAddress, getCERC20Address } from '@/app/utils/getAddress';
 import { toast } from 'react-toastify';
