@@ -46,27 +46,84 @@ shToken is a token that represents the amount of funds a user has deposited into
 
 DAO is a decentralized autonomous organization that provides its members with more lending capabilities. DAO members can borrow funds from the liquidity pool with less collateral.
 
+User can verify their membership of DAO with DID using Polygon ID. (In development)
+
 ### 3.4. Credit Score & DAO score
 
 Credit Score is a score that represents a user's creditworthiness. The credit score is calculated based on the user's transaction history, and the DAO score is calculated based on the user's contribution to the DAO.
 
-### 3.5. DID
+These scores are used to determine the amount of funds a user can borrow from the liquidity pool.
 
-DID is a decentralized identifier that is used to verify a user's identity. The DID is used to provide users with a more secure and reliable credit score.
+### 3.5. KYC with DID
+
+KYC with DID is a system that allows users to verify their identity using DID. This system is used to verify the user's identity when calculating the user's credit score and DAO score.
 
 ### 3.6. Cross-chain Messaging
 
 Cross-chain Messaging is a messaging system that allows users to interact with the liquidity pool on different blockchains. This allows users to deposit and borrow funds on different blockchains.
 
+It helps maintain all shTokens in one main chain and not bridging tokens. It is implemented using Chainlink's CCIP.
+
 ### 3.7. Automated Liquidation
 
 Automated Liquidation is a system that automatically liquidates a user's collateral when the user's collateral value falls below the required collateral ratio.
+
+It is implemented using Chainlink's Automation.
 
 ## 4. Usage
 
 ### 4.1. Basic Usage
 
+**Getting Started**:
+To start using Shylock Finance, users must first connect their wallet to the platform. Supported wallets include MetaMask, WalletConnect, and others compatible with Avalanche C-Chain, Ethereum Sepolia, and Polygon Mumbai.
+
+**Depositing Funds**:
+
+1. Navigate to the "Deposit" section.
+2. Choose the desired blockchain network.
+3. Select the amount and type of cryptocurrency to deposit.
+4. Approve and confirm the transaction in your wallet.
+
+**Borrowing Funds**:
+
+1. Go to the "Borrow" section.
+2. Your available borrowing limit based on your collateral and credit score will be displayed.
+3. Select the amount and type of cryptocurrency you wish to borrow.
+4. Approve and confirm the transaction.
+
+**Repaying Loans**:
+
+1. Visit the "Repay" section.
+2. Choose the loan you wish to repay.
+3. Input the repayment amount.
+4. Confirm the repayment transaction in your wallet.
+
 ### 4.2. Examples
+
+**Example 1 - Deposit and Borrow**:
+
+- Alice wants to deposit 2 ETH into the liquidity pool.
+- She navigates to the deposit section, selects ETH, and confirms the transaction.
+- Based on her deposit, she is eligible to borrow up to 1.5 ETH worth of different cryptocurrencies.
+- She decides to borrow 100 DAI and completes the transaction.
+
+**Example 2 - DAO Membership and Increased Borrowing Limit**:
+
+- Bob is a member of the DAO with a high DAO score.
+- He deposits 1 ETH and is eligible to borrow up to 1.25 ETH worth of cryptocurrencies, higher than non-DAO members.
+- Bob borrows 150 LINK and agrees to the terms of the loan.
+
+**Example 3 - Automated Liquidation Scenario**:
+
+- Charlie borrows funds against his 3 ETH collateral.
+- If the value of ETH drops significantly, causing his collateral ratio to fall below the required threshold, the automated liquidation system is triggered.
+- A portion of Charlie’s collateral is sold to bring the loan back into compliance.
+
+**Example 4 - Cross-chain Borrowing**:
+
+- David deposits 1 ETH into the liquidity pool on Avalanche C-Chain Fuji.
+- He is eligible to borrow up to 1 ETH worth of cryptocurrencies on Avalanche C-Chain.
+- David borrows 100 DAI on Ethereum Sepolia chain.
 
 ## 5. Testing & Development
 
@@ -89,12 +146,13 @@ Automated Liquidation is a system that automatically liquidates a user's collate
   - [ ] Polygon ZK-EVM Integration
   - [ ] Develop more advanced credit, DAO score system
   - [ ] Develop more advanced liquidation system
+  - [ ] Dao verification with Polygon ID
 
 ## 7. License
 
 MIT License
 
-see [`LICENSE.md`](LICENSE.md) for details
+See [`LICENSE.md`](LICENSE.md) for details
 
 ## 8. Authors & Contact Information
 
