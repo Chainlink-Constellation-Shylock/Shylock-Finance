@@ -62,7 +62,7 @@ export default function AddCollateralBox() {
         theme: "dark",
       });
 
-      const approveTx = await contract.approve(cTokencontract, ethers.utils.parseUnits(addAmount));
+      const approveTx = await contract.approve(cERC20Address, ethers.utils.parseUnits(addAmount));
       console.log('Transaction:', approveTx);
       await approveTx.wait();
 
