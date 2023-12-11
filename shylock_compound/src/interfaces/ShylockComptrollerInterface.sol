@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import "../compound/ComptrollerInterface.sol";
 
 abstract contract ShylockComptrollerInterface is ComptrollerInterface{
-    function getAllAccountCtokenBalance(address account) virtual external returns (uint, uint);
+    function getAllAccountCtokenBalance(address account) virtual external view returns (uint, uint);
     function getAllAccountReserve(address account) virtual external view returns (uint, uint);
     function getAllAccountBorrow(address account) virtual external view returns (uint, uint);
     function addDaoReserveAllowed(address cToken, address dao, uint reserveAmount) virtual external returns (uint);

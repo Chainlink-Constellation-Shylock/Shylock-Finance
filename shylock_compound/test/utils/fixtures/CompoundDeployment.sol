@@ -13,6 +13,7 @@ import "../../../src/ShylockCErc20.sol";
 import "../../utils/fixtures/ERC20Fixtures.sol";
 // import "../../mock/CERC20Mock.sol";
 import "../../mock/CEtherMock.sol";
+import "../../mock/SimplePriceOracleMock.sol";
 
 import "forge-std/Test.sol";
 
@@ -75,6 +76,14 @@ contract CompoundDeployment is Test, ERC20Fixtures {
         //     address payable admin_,
         //     address ccipGateWay_)
 
+
+
+        SimplePriceOracle priceOracle = new SimplePriceOracle();
+        priceOracle.setDirectPrice(address(daiToken), 0.00042*10**18);
+
+        ShylockComptrollerInterface(address(unitroller))._setPriceOracle(priceOracle);
+        
+
         address ccipGateWay = address(0);
 
         bDAI = new ShylockCErc20(
@@ -105,7 +114,7 @@ contract CompoundDeployment is Test, ERC20Fixtures {
         cEther = CToken(address(bETH));
 
         ComptrollerInterface(address(unitroller))._supportMarket(cToken);
-        ComptrollerInterface(address(unitroller))._supportMarket(cToken);
+        ComptrollerInterface(address(unitroller))._supportMarket(cEther);
         // ComptrollerInterface(address(unitroller))._setBorrowPaused(cToken, true);
 
         if (BDAI) {

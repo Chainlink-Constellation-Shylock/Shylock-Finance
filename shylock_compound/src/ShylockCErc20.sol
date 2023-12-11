@@ -92,4 +92,13 @@ contract ShylockCErc20 is CErc20, ShylockCToken {
         borrowInternal(dao, dueTimestamp, borrowAmount);
         return NO_ERROR;
     }
+
+    function repayBorrow(uint repayAmount) override external returns (uint) {
+        revert ("ShylockCErc20: Default repayBorrow not allowed");
+    }
+
+    function repayBorrow(address dao, uint repayAmount, uint index) external returns (uint) {
+        repayBorrowInternal(dao, repayAmount, index);
+        return NO_ERROR;
+    }
 }

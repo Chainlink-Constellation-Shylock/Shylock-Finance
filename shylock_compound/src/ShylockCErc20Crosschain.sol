@@ -32,6 +32,10 @@ contract ShylockCErc20Crosschain is ShylockCErc20 {
                 ccipGateWay = ccipGateWay_;
     }
 
+    function doTransferIn(address from, uint amount) override(CErc20,CToken) internal returns (uint) {
+        return amount;
+    }
+
     function doTransferOut(address to, uint amount) internal {
         bytes4 functionSelector = bytes4(keccak256("doTransferOut(address,uint)"));
 
