@@ -4,7 +4,7 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/ShylockCErc20Abi';
-import { getMockERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
+import { getCERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
 import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
@@ -43,9 +43,9 @@ export default function LendBox() {
         console.log('ChainId not found');
         return;
       }
-      const mockERC20Address = getMockERC20Address(chainId);
-      const shylockCMockERC20 = new ethers.Contract(
-        mockERC20Address,
+      const cErc20Address = getCERC20Address(chainId);
+      const shylockCERC20 = new ethers.Contract(
+        cErc20Address,
         ShylockCErc20Abi,
         signer
       );
@@ -59,7 +59,7 @@ export default function LendBox() {
         progress: undefined,
         theme: "dark",
       });
-      const tx = await shylockCMockERC20.borrow(
+      const tx = await shylockCERC20.borrow(
         daoAddress,
         // 3 weeks from now
         getCurrentTimestamp() + 181440,
