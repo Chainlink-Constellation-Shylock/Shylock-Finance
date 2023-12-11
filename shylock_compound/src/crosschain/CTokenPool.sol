@@ -55,7 +55,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.call(data);
+        require(sendMessage(destinationChain, ccipGateWay, data), "Message sending failed");
     }
 
     function addMemberReserve(address dao, uint256 amount) external payable {
@@ -68,7 +68,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.call(data);
+        require(sendMessage(destinationChain, ccipGateWay, data), "Message sending failed");
     }
     
     function withdrawDaoReserve(uint256 amount) public {
@@ -83,7 +83,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.call(data);
+        require(sendMessage(destinationChain, ccipGateWay, data), "Message sending failed");
     }
 
     function withdrawMemberReserve(address dao, uint256 amount) public {
@@ -98,6 +98,6 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
         data = abi.encodePacked(data, msg.sender);
         
-        ccipGateWay.call(data);
+        require(sendMessage(destinationChain, ccipGateWay, data), "Message sending failed");
     }
 }
