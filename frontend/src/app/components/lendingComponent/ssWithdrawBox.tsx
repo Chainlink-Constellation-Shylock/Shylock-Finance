@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
-import { getChainName } from '@/app/utils/getChainName';
-import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { getMockERC20Address } from '@/app/utils/getAddress';
-import { toast } from 'react-toastify';
+import { getChainName } from '../../utils/getChainName';
+import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
+import { getCERC20Address } from '../../utils/getAddress';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
   const [withdrawAmount, setwithdrawAmount] = useState('');
@@ -21,13 +21,13 @@ export default function LendBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setwithdrawAmount(e.target.value);
   };
 
-  const handleWithdraw = async (e: any) => {
+  const handleWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!walletProvider || !isConnected) {
@@ -43,8 +43,8 @@ export default function LendBox() {
         console.log('ChainId not found');
         return;
       }
-      const mockERC20Address = getMockERC20Address(chainId);
-      const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
+      const cERC20Address = getCERC20Address(chainId);
+      const contract = new ethers.Contract(cERC20Address, ShylockCErc20Abi, signer);
       toast.info('Withdrawing...', {
         position: "top-right",
         autoClose: 15000,
@@ -92,7 +92,7 @@ export default function LendBox() {
       <form onSubmit={handleWithdraw}>
         <div className="mb-4">
           <label className="block text-gray-700 text-medium font-bold mb-2">
-            Withdraw and Earn Interest
+            Withdraw Liquidity
           </label>
           <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
@@ -135,10 +135,22 @@ export default function LendBox() {
             className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <button onClick={() => handleWithdraw(withdrawAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        <button className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Withdraw
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

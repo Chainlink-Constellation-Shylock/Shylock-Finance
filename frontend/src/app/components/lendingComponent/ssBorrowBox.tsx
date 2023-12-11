@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
-import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { getMockERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
-import { toast } from 'react-toastify';
+import { ShylockCErc20Abi } from '@/app/utils/abi/ShylockCErc20Abi';
+import { getCERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
   const [borrowAmount, setBorrowAmount] = useState('');
@@ -23,7 +23,7 @@ export default function LendBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setBorrowAmount(e.target.value);
@@ -43,9 +43,9 @@ export default function LendBox() {
         console.log('ChainId not found');
         return;
       }
-      const mockERC20Address = getMockERC20Address(chainId);
-      const shylockCMockERC20 = new ethers.Contract(
-        mockERC20Address,
+      const cErc20Address = getCERC20Address(chainId);
+      const shylockCERC20 = new ethers.Contract(
+        cErc20Address,
         ShylockCErc20Abi,
         signer
       );
@@ -59,11 +59,11 @@ export default function LendBox() {
         progress: undefined,
         theme: "dark",
       });
-      const tx = await shylockCMockERC20.borrow(
+      const tx = await shylockCERC20.borrow(
         daoAddress,
         // 3 weeks from now
         getCurrentTimestamp() + 181440,
-        ethers.utils.parseEther(borrowAmount)
+        ethers.utils.parseUnits(borrowAmount)
       );
       await tx.wait();
       console.log('Borrow transaction completed');
@@ -76,7 +76,7 @@ export default function LendBox() {
         draggable: true,
         progress: undefined,
         theme: "dark",
-        });
+      });
     } catch (error) {
       console.error('Error during deposit transaction:', error);
     }
@@ -95,6 +95,10 @@ export default function LendBox() {
     <div className='w-full'>
       <form onSubmit={handleBorrow}>
         <div className="mb-4">
+          <label className="block text-gray-700 text-medium font-bold mb-2">
+            Deposit and Earn Interest
+          </label>
+          <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Select Token:
           </label>
@@ -139,6 +143,18 @@ export default function LendBox() {
           Borrow
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
-import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { ERC20Abi } from '@/app/utils/abi/erc20Abi';
+import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
+import { ERC20Abi } from '../../utils/abi/ERC20Abi';
 import { getMockERC20Address, getCERC20Address } from '@/app/utils/getAddress';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function LendBox() {
   const [depositAmount, setDepositAmount] = useState('');
@@ -29,8 +30,8 @@ export default function LendBox() {
     setDepositAmount(e.target.value);
   };
 
-  const handleDeposit = async (e: any) => {
-
+  const handleDeposit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!walletProvider || !isConnected) {
       console.log('Wallet not connected');
       return;
@@ -155,10 +156,22 @@ export default function LendBox() {
             className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <button onClick={() => handleDeposit(depositAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        <button className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Deposit
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

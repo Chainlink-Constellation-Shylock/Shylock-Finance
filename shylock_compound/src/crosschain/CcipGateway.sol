@@ -10,11 +10,27 @@ import {IRouterClient} from "@chainlink/contracts-ccip/ccip/interfaces/IRouterCl
 contract CcipGateway is CCIPReceiver {
     LinkTokenInterface linkToken;
 
-    mapping (address => uint64) public destinationChainSelector;  // tokenAddress => destinationChainSelector
-    mapping (address => address) public tokenPoolAddress;         // tokenAddress => tokenPoolAddress
-    mapping (uint64 => mapping (address => address)) public tokenAddress; // destinationChainSelector => tokenPoolAddress => tokenAddress
+    uint64 public mainChainSelector;
+    address public mainGateway;
+    mapping(address => uint64) public addressToChainSelector;
+    mapping(uint64 => address) public chainSelectorToGateway;
+    mapping(address => address) public fromToConnection;
+  
     constructor(address _router, address link) CCIPReceiver(_router) {
         linkToken = LinkTokenInterface(link);
+    }
+
+    function setSubChain(uint64 _mainChainSelect, address _mainGateway) external {
+        mainChainSelector = _mainChainSelect;
+        mainGateway = _mainGateway;
+    }
+
+    function setAddressToChainSelector(address _address, uint64 _chainSelector) external {
+        addressToChainSelector[_address] = _chainSelector;
+    }
+
+    function setFromToConnection(address _from, address _to) external {
+        fromToConnection[_from] = _to;
     }
 
     function _ccipReceive(
@@ -25,18 +41,29 @@ contract CcipGateway is CCIPReceiver {
 
         uint64 sourceChainSelector = message.sourceChainSelector;
 
+        // Get the message data.
+        bytes memory encodedCall = message.data;
+
         // Call the function to handle the message.
-        (bool success, bytes memory returndata) = tokenAddress[sourceChainSelector][sender].call(message.data);
+        (bool success, bytes memory returnData) = fromToConnection[sender].call(encodedCall);
     }
 
     function sendMessage(
+        address destinationAddress,
         bytes memory data
     ) external returns (bytes32 messageId) {
-        uint64 destinationChain = destinationChainSelector[msg.sender];
-        address receiverAddress = tokenPoolAddress[msg.sender];
+        uint64 destinationChainSelector;
+        address destinationGateway;
+        if(mainChainSelector != 0 && mainGateway != address(0)) {
+            destinationChainSelector = mainChainSelector;
+            destinationGateway = mainGateway;
+        } else {
+            destinationChainSelector = addressToChainSelector[destinationAddress];
+            destinationGateway = chainSelectorToGateway[destinationChainSelector];
+        }
 
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
-            receiver: abi.encode(receiverAddress), // ABI-encoded receiver contract address
+            receiver: abi.encode(destinationGateway), // ABI-encoded receiver contract address
             data: data,
             tokenAmounts: new Client.EVMTokenAmount[](0),
             extraArgs: Client._argsToBytes(
@@ -49,13 +76,13 @@ contract CcipGateway is CCIPReceiver {
         IRouterClient router = IRouterClient(this.getRouter());
 
         // Get the fee required to send the message. Fee paid in LINK.
-        uint256 fees = router.getFee(destinationChain, evm2AnyMessage);
+        uint256 fees = router.getFee(destinationChainSelector, evm2AnyMessage);
 
         // Approve the Router to pay fees in LINK tokens on contract's behalf.
         linkToken.approve(address(router), fees);
 
         // Send the message through the router and store the returned message ID
-        messageId = router.ccipSend(destinationChain, evm2AnyMessage);
+        messageId = router.ccipSend(destinationChainSelector, evm2AnyMessage);
 
         // TODO: Emit an event with message details
 
@@ -63,9 +90,4 @@ contract CcipGateway is CCIPReceiver {
         return messageId;
     }
 
-    // TODO: Add onlyOwner modifier
-    function registerToken(address _tokenAddress, uint64 _destinationChainSelector, address _tokenPoolAddress) public {
-        destinationChainSelector[_tokenAddress] = _destinationChainSelector;
-        tokenPoolAddress[_tokenAddress] = _tokenPoolAddress;
-    }
 }
