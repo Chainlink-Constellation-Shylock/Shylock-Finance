@@ -1,6 +1,6 @@
 # Shylock Finance
 
-## Introduction to Shylock Finance
+## 1. Introduction
 
 Shylock Finance is an innovative DeFi project designed to facilitate **cross-chain lending and borrowing**. At its core, it leverages the fundamental system of the **Compound Protocol** but stands out with its unique feature: an **under-collateralized loan** system.
 
@@ -8,50 +8,116 @@ This groundbreaking approach allows users to borrow amounts exceeding their coll
 
 **What is Shylock?**
 
+<a href="https://www.metmuseum.org/art/collection/search/400327">
+    <img src="assets/shylock.png" alt='Shylock (from "Twelve Characters from Shakespeare - John Hamilton Mortimer")' width="50%" height="50%">
+</a>
+
 The name **"Shylock"** is inspired by a character from William Shakespeare's "The Merchant of Venice." Known as a stringent moneylender, Shylock's character is synonymous with strict lending terms. In contrast, Shylock Finance reinterprets this concept for the DeFi world, focusing on innovative and flexible lending solutions. While drawing inspiration from Shylock’s adherence to strict principles, our project diverges by promoting a more equitable and accessible financial ecosystem.
 
-## 2. 소개
+## 2. Project Overview
 
-- 프로젝트 개요
-- 기술적 배경
+### 2.1. Architecture
 
-## 3. 프로젝트의 특징
+![Shylock Finance Architecture Diagram](assets/ShylockFinance-Architecture.png)
 
-- 주요 기능 및 혁신점
-- 사용자 가치
+### 2.2. Tech Stack
 
-## 4. 시작하기
+- **Frontend**: Next.js, Ethers.js
+- **Backend**: Node.js, Express
+- **Smart Contract**: Solidity, Foundry
+- **Blockchain**: Avalanche C-Chain(Fuji), Ethereum(Sepolia), Polygon(Mumbai)
+- **Cross-chain Messaging**: [CCIP(Cross-chain Interoperability Protocol)](https://chain.link/cross-chain)
+- **Automated Liquidation**: [Chainlink Automation](https://chain.link/automation)
+- **DAO Contribution Tracking**: [Chainlink Functions](https://chain.link/functions)
+- **Price Oracle**: [Chainlink Data Feeds](https://data.chain.link/)
+- **DID**: [Polygon ID](https://polygonid.com/)
 
-- 설치 방법
-- 설정 요구사항
+## 3. How It Works
 
-## 5. 사용 방법
+### 3.1. Liquidity Pool
 
-- 기본 사용법
-- 사용 예시
+The liquidity pool is a pool of funds that can be borrowed or lent by users. The pool is composed of funds from users and DAO's reserves.
 
-## 6. 테스트 및 개발
+### 3.2. shToken
 
-- 테스트 방법
-- 기여 가이드라인
+shToken is a token that represents the amount of funds a user has deposited into the liquidity pool. It inherites the cToken in Compound Protocol. shTokens are minted when a user deposits funds into the pool and burned when a user withdraws funds from the pool.
 
-## 7. 로드맵 및 미래 계획
+### 3.3. DAO
 
-- 개발 상태
-- 향후 계획
+DAO is a decentralized autonomous organization that provides its members with more lending capabilities. DAO members can borrow funds from the liquidity pool with less collateral.
 
-## 8. FAQ
+### 3.4. Credit Score & DAO score
 
-- 자주 묻는 질문과 답변
+Credit Score is a score that represents a user's creditworthiness. The credit score is calculated based on the user's transaction history, and the DAO score is calculated based on the user's contribution to the DAO.
 
-## 9. 라이센스
+### 3.5. DID
 
-- 라이센스 정보
+DID is a decentralized identifier that is used to verify a user's identity. The DID is used to provide users with a more secure and reliable credit score.
 
-## 10. 저자 및 기여자
+### 3.6. Cross-chain Messaging
 
-- 팀원 및 기여자 명단
+Cross-chain Messaging is a messaging system that allows users to interact with the liquidity pool on different blockchains. This allows users to deposit and borrow funds on different blockchains.
 
-## 11. 연락처 정보
+### 3.7. Automated Liquidation
 
-- 이메일, 소셜 미디어 링크 등
+Automated Liquidation is a system that automatically liquidates a user's collateral when the user's collateral value falls below the required collateral ratio.
+
+## 4. Usage
+
+### 4.1. Basic Usage
+
+### 4.2. Examples
+
+## 5. Testing & Development
+
+### 5.1. Testing
+
+### 5.2. Contributing
+
+## 6. Roadmap & Future Plans
+
+- [x] **Phase 1**: Basic Features
+  - [x] Liquidity Pool
+  - [x] shToken
+  - [x] DAO
+  - [x] Credit Score & DAO score
+  - [x] DID
+  - [x] Cross-chain Messaging
+  - [x] Automated Liquidation
+  - [x] Web UI
+- [ ] **Phase 2**: Advanced Features
+  - [ ] Polygon ZK-EVM Integration
+  - [ ] Develop more advanced credit, DAO score system
+  - [ ] Develop more advanced liquidation system
+
+## 7. License
+
+MIT License
+
+see [`LICENSE.md`](LICENSE.md) for details
+
+## 8. Authors & Contact Information
+
+### Sangwon Moon
+
+- Email:
+- Github:
+- LinkedIn:
+- Twitter:
+- Telegram:
+
+### Seungmin Jeon
+
+- Email:
+- Github:
+- LinkedIn:
+- Twitter:
+- Telegram:
+
+### Wonjae Choi
+
+- Email: [choi@wonj.me](mailto:choi@wonj.me)
+- Github: [@wonj1012](github.com/wonj1012)
+- LinkedIn: [wonj](https://www.linkedin.com/in/wonj/)
+- Twitter: [@0xwonj](https://twitter.com/0xwonj)
+- Telegram: [@wonj1012](https://t.me/wonj1012)
