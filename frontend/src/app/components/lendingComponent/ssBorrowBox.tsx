@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/ShylockCErc20Abi';
 import { getMockERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
   const [borrowAmount, setBorrowAmount] = useState('');
@@ -23,7 +23,7 @@ export default function LendBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setBorrowAmount(e.target.value);
@@ -63,7 +63,7 @@ export default function LendBox() {
         daoAddress,
         // 3 weeks from now
         getCurrentTimestamp() + 181440,
-        ethers.utils.parseEther(borrowAmount)
+        ethers.utils.parseUnits(borrowAmount)
       );
       await tx.wait();
       console.log('Borrow transaction completed');
@@ -76,7 +76,7 @@ export default function LendBox() {
         draggable: true,
         progress: undefined,
         theme: "dark",
-        });
+      });
     } catch (error) {
       console.error('Error during deposit transaction:', error);
     }
@@ -139,6 +139,18 @@ export default function LendBox() {
           Borrow
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

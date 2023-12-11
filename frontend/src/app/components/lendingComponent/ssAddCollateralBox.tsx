@@ -6,7 +6,7 @@ import { getChainName } from '../../utils/getChainName';
 import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
 import { ERC20Abi } from '../../utils/abi/ERC20Abi';
 import { getMockERC20Address, getDaoAddress, getCERC20Address } from '@/app/utils/getAddress';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function AddCollateralBox() {
   const [addAmount, setAddAmount] = useState('');
@@ -29,7 +29,8 @@ export default function AddCollateralBox() {
     setAddAmount(e.target.value);
   };
 
-  const handleAddCollateral = async (e: any) => {
+  const handleAddCollateral = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
     if (!walletProvider || !isConnected) {
       console.log('Wallet not connected');
@@ -95,7 +96,7 @@ export default function AddCollateralBox() {
         theme: "dark",
         });
     } catch (error) {
-      console.error('Error during deposit transaction:', error);
+      console.error('Error during add collateral transaction:', error);
     }
   };
 
@@ -161,6 +162,18 @@ export default function AddCollateralBox() {
           Add Collateral
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { getChainName } from '../../utils/getChainName';
 import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
 import { getMockERC20Address } from '../../utils/getAddress';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
   const [withdrawAmount, setwithdrawAmount] = useState('');
@@ -21,13 +21,13 @@ export default function LendBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setwithdrawAmount(e.target.value);
   };
 
-  const handleWithdraw = async (e: any) => {
+  const handleWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!walletProvider || !isConnected) {
@@ -135,10 +135,22 @@ export default function LendBox() {
             className="shadow appearance-none border rounded w-full h-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
-        <button onClick={() => handleWithdraw(withdrawAmount)} className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        <button className="bg-[#755f44] hover:bg-[#765f99] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Withdraw
         </button>
       </form>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 }

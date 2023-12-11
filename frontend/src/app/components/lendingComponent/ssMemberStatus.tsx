@@ -51,9 +51,6 @@ export default function MemberComponent() {
     });
   }, []);
 
-if (isLoading) {
-  return <div>Loading...</div>; // Or any other loading state representation
-}
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -71,7 +68,7 @@ if (isLoading) {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-medium font-bold mt-2">Total Deposited:</p>
-                  <p className="text-medium font-bold mt-2">{data.totalDeposit ?? 0.001} ETH</p>
+                  <p className="text-medium font-bold mt-2">{data.totalDeposit ?? 0} ETH</p>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-medium font-bold mt-2">Total Borrowed:</p>
