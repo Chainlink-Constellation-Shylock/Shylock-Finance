@@ -19,24 +19,25 @@ export default function MemberComponent() {
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
       const shylockComptroller = new ethers.Contract(
-        "0x3f0A0EA2f86baE6362CF9799B523BA06647Da018",
+        "0x917BFB0f464C200Bcae816ffCe0569b9D95ECD70",
         ShylockComptrollerAbi,
         signer
       );
       try {
-        const totalDeposit = await shylockComptroller.callStatic.getAllAccountCtokenBalance(address).then((result: ethers.BigNumberish) => {
-          return ethers.utils.formatUnits(result, 18);
-        });
+        const totalDepositArray = await shylockComptroller.callStatic.getAllAccountCtokenBalance(address);
+        const totalDeposit = ethers.utils.formatUnits(totalDepositArray[1]);
         console.log("totalDeposit", totalDeposit);
-        const totalBorrow = await shylockComptroller.callStatic.getAllAccountBorrow(address).then((result: ethers.BigNumberish) => {
-          return ethers.utils.formatUnits(result, 18);
-        });
+      
+        const totalBorrowArray = await shylockComptroller.callStatic.getAllAccountBorrow(address);
+        const totalBorrow = ethers.utils.formatUnits(totalBorrowArray[1]);
         console.log("totalBorrow", totalBorrow);
+      
         return { totalDeposit, totalBorrow };
       } catch (error) {
-        console.log(error);
+        console.error("Error:", error);
         return { totalDeposit: "0", totalBorrow: "0" };
       }
+      
     } else {
       return { totalDeposit: "0", totalBorrow: "0" };
     }
@@ -44,15 +45,11 @@ export default function MemberComponent() {
 
   useEffect(() => {
     setIsLoading(true);
-    if (!isConnected) {
-      setIsLoading(false);
-      return;
-    }
     getDepositAndBorrows().then(result => {
       setData(result);
       setIsLoading(false);
     });
-  }, [chainId, isConnected, walletProvider, address]);
+  }, []);
 
 if (isLoading) {
   return <div>Loading...</div>; // Or any other loading state representation
@@ -74,11 +71,11 @@ if (isLoading) {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-medium font-bold mt-2">Total Deposited:</p>
-                  <p className="text-medium font-bold mt-2">{data.totalDeposit} ETH</p>
+                  <p className="text-medium font-bold mt-2">{data.totalDeposit ?? 0.001} ETH</p>
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-medium font-bold mt-2">Total Borrowed:</p>
-                  <p className="text-medium font-bold mt-2">{data.totalBorrow} ETH</p>
+                  <p className="text-medium font-bold mt-2">{data.totalBorrow ?? 0} ETH</p>
                 </div>
               </div>
             </CardContent>

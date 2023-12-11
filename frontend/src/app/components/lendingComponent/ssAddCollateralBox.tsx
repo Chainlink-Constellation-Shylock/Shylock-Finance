@@ -23,14 +23,13 @@ export default function AddCollateralBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setAddAmount(e.target.value);
   };
 
   const handleAddCollateral = async (e: any) => {
-    e.preventDefault();
 
     if (!walletProvider || !isConnected) {
       console.log('Wallet not connected');

@@ -23,14 +23,13 @@ export default function LendBox() {
     const currency = chainName === 'Avalanche Fuji' ? 'AVAX' : 'ETH';
     setDefaultCurrency(currency);
     setSelectedToken(currency);
-  }, [chainId]);
+  }, []);
 
   const handleInputChange = (e: any) => {
     setDepositAmount(e.target.value);
   };
 
   const handleDeposit = async (e: any) => {
-    e.preventDefault();
 
     if (!walletProvider || !isConnected) {
       console.log('Wallet not connected');
