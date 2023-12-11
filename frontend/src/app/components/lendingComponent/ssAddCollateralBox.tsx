@@ -4,7 +4,8 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
+import { ERC20Abi } from '@/app/utils/abi/erc20Abi';
+import { getMockERC20Address, getDaoAddress, getCERC20Address } from '@/app/utils/getAddress';
 import { toast } from 'react-toastify';
 
 export default function AddCollateralBox() {
@@ -15,7 +16,6 @@ export default function AddCollateralBox() {
   const { address, chainId, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
 
-  const mockERC20Address = getMockERC20Address();
   const daoAddress = getDaoAddress();
 
   useEffect(() => {
@@ -39,10 +39,33 @@ export default function AddCollateralBox() {
 
     try {
       // Connect to the network
+
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
+      if (!chainId) {
+        console.log('Chain ID not found');
+        return;
+      }
+      const mockERC20Address = getMockERC20Address(chainId);
+      const cERC20Address = getCERC20Address(chainId);
 
-      const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
+      const contract = new ethers.Contract(mockERC20Address, ERC20Abi, signer);
+      const cTokencontract = new ethers.Contract(cERC20Address, ShylockCErc20Abi, signer);
+      toast.info('Approving...', {
+        position: "top-right",
+        autoClose: 15000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
+
+      const approveTx = await contract.approve(cTokencontract, ethers.utils.parseUnits(addAmount));
+      console.log('Transaction:', approveTx);
+      await approveTx.wait();
+
       toast.info('Adding Collateral...', {
         position: "top-right",
         autoClose: 15000,
@@ -54,7 +77,7 @@ export default function AddCollateralBox() {
         theme: "dark",
       });
 
-      const tx = await contract.addMemberReserve(daoAddress, ethers.utils.parseUnits(addAmount));
+      const tx = await cTokencontract.addMemberReserve(daoAddress, ethers.utils.parseUnits(addAmount));
 
       console.log(`Depositing ${addAmount} ${selectedToken}`);
       console.log('Transaction:', tx);
@@ -112,10 +135,10 @@ export default function AddCollateralBox() {
             </button>
             <button 
               type="button" 
-              onClick={() => handleTokenSelection('mockERC20')} 
+              onClick={() => handleTokenSelection('DAI')} 
               className="block w-full text-left px-4 py-2 hover:bg-gray-100"
             >
-              mockERC20
+              DAI
             </button>
           </div>
         )}

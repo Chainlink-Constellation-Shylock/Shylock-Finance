@@ -55,7 +55,7 @@ export default function UniswapScore() {
           ℹ️ You <b>CANNOT</b> borrow money from Shylock Finance with this score.
         </p>
         <p className="text-sm text-gray-600">
-          ℹ️ Your score is highly likely to be <b>0</b>. <b>DO NOT</b> push the button multiple times if you don't want to waste your time.
+          ℹ️ Your score is highly likely to be <b>0</b>. <b>DO NOT</b> push the button multiple times.
         </p>
         <button 
           className={buttonStyle}

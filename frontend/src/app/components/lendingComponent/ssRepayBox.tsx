@@ -4,18 +4,20 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '@/app/utils/getChainName';
 import { ShylockCErc20Abi } from '@/app/utils/abi/shylockCErc20Abi';
-import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
+import { ERC20Abi } from '@/app/utils/abi/erc20Abi';
+import { getMockERC20Address, getDaoAddress, getCERC20Address } from '@/app/utils/getAddress';
 import { toast } from 'react-toastify';
 
 export default function LendBox() {
   const [repayAmount, setrepayAmount] = useState('');
   const [defaultCurrency, setDefaultCurrency] = useState('ETH');
-  const [selectedToken, setSelectedToken] = useState('ETH');
+  const [selectedToken, setSelectedToken] = useState('DAI');
   const [showTokenList, setShowTokenList] = useState(false);
   const { address, chainId, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
 
-  const mockERC20Address = getMockERC20Address();
+  
+
   const daoAddress = getDaoAddress();
   useEffect(() => {
     const chainName = getChainName(chainId ?? 0);
@@ -40,8 +42,28 @@ export default function LendBox() {
       // Connect to the network
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
+      if (!chainId) {
+        console.log('ChainId not found');
+        return;
+      } 
+      const mockERC20Address = getMockERC20Address(chainId);
+      const cERC20Address = getCERC20Address(chainId);
+      const contract = new ethers.Contract(mockERC20Address, ERC20Abi, signer);
+      const cTokencontract = new ethers.Contract(cERC20Address, ShylockCErc20Abi, signer);
+      toast.info('Approving...', {
+        position: "top-right",
+        autoClose: 15000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
+      const approveTx = await contract.approve(cTokencontract, ethers.utils.parseUnits(repayAmount));
+      console.log('Transaction:', approveTx);
+      await approveTx.wait();
 
-      const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
       toast.info('Repaying...', {
         position: "top-right",
         autoClose: 15000,
@@ -52,7 +74,7 @@ export default function LendBox() {
         progress: undefined,
         theme: "dark",
       });
-      const tx = await contract.repayBorrow(ethers.utils.parseUnits(repayAmount));
+      const tx = await cTokencontract.repayBorrow(ethers.utils.parseUnits(repayAmount));
 
       console.log(`Repaying ${repayAmount} ${selectedToken}`);
       console.log('Transaction:', tx);
@@ -109,10 +131,10 @@ export default function LendBox() {
             </button>
             <button 
               type="button" 
-              onClick={() => handleTokenSelection('mockERC20')} 
+              onClick={() => handleTokenSelection('DAI')} 
               className="block w-full text-left px-4 py-2 hover:bg-gray-100"
             >
-              mockERC20
+              DAI
             </button>
           </div>
         )}

@@ -15,7 +15,7 @@ export default function LendBox() {
   const { address, chainId, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
 
-  const mockERC20Address = getMockERC20Address();
+  
   const daoAddress = getDaoAddress();
 
   useEffect(() => {
@@ -39,6 +39,11 @@ export default function LendBox() {
     try {
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
+      if (!chainId) {
+        console.log('ChainId not found');
+        return;
+      }
+      const mockERC20Address = getMockERC20Address(chainId);
       const shylockCMockERC20 = new ethers.Contract(
         mockERC20Address,
         ShylockCErc20Abi,
@@ -107,10 +112,10 @@ export default function LendBox() {
             </button>
             <button 
               type="button" 
-              onClick={() => handleTokenSelection('mockERC20')} 
+              onClick={() => handleTokenSelection('DAI')} 
               className="block w-full text-left px-4 py-2 hover:bg-gray-100"
             >
-              mockERC20
+              DAI
             </button>
           </div>
         )}
