@@ -8,6 +8,14 @@ const web3 = new Web3("https://rpc-mumbai.maticvigil.com/");
 const app = express();
 const port = 8080;
 
+const contractABI = [
+  /* ... Governance Contract ABI ... */
+];
+const contractAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const privateKey = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+
+const contract = new web3.eth.Contract(contractABI, contractAddress);
+
 let hostUrl = "http://127.0.0.1:8080";
 
 app.use(express.json());
@@ -34,14 +42,6 @@ app.listen(port, () => {
 
 // Create a map to store the auth requests and their session IDs
 const requestMap = new Map();
-
-const contractABI = [
-  /* ... 컨트랙트 ABI ... */
-];
-const contractAddress = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-const privateKey = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-
-const contract = new web3.eth.Contract(contractABI, contractAddress);
 
 async function sendKYCCompletionTransaction(userId) {
   const account = web3.eth.accounts.privateKeyToAccount(privateKey);
@@ -148,7 +148,7 @@ async function Callback(req, res) {
     return res.status(500).send(error);
   }
 
-  //   await sendKYCCompletionTransaction(authResponse.from);
+  await sendKYCCompletionTransaction(authResponse.from);
 
   console.log("authResponse", authResponse);
 
