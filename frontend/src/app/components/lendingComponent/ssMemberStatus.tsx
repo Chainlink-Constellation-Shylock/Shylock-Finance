@@ -3,7 +3,7 @@
 import { CardContent } from "@/app/components/ui/card";
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
-import { ShylockComptrollerAbi } from '@/app/utils/abi/shylockComptrollerAbi';
+import { ShylockComptrollerAbi } from "../../utils/abi/ShylockComptrollerAbi";
 import { useState, useEffect } from "react";
 
 export default function MemberComponent() {

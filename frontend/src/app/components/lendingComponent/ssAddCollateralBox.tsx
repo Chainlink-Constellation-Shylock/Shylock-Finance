@@ -4,7 +4,7 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '../../utils/getChainName';
 import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
-import { ERC20Abi } from '../../utils/abi/erc20Abi';
+import { ERC20Abi } from '../../utils/abi/ERC20Abi';
 import { getMockERC20Address, getDaoAddress, getCERC20Address } from '@/app/utils/getAddress';
 import { toast } from 'react-toastify';
 
