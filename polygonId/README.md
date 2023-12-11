@@ -12,15 +12,15 @@
 6. Fire up your polygon id application on your phone and scan the QR code.
 7. Now the DID is on your phone. (If not, please scan once more.)
 
-![KYC DID](../assets/did_KYC.jpeg)
+![KYC DID](assets/did_KYC.jpeg)
 
 ### KYC DID Verification
 
 1. Go to this [verification page](). This page checks if the DID is valid and if the user has a KYC.
 2. Connect wallet of your preference and scan the QR code.
-   ![DID QR Code](../assets/did_qr.png)
+   ![DID QR Code](assets/did_qr.png)
 3. The server will check if the DID is valid and if the user has a KYC.
-   ![KYC DID Verification](../assets/did_verification.png)
+   ![KYC DID Verification](assets/did_verification.png)
 
 4. If the user has a KYC, the server will send a transaction to the governance contract deployed on Avalanche C-Chain (Fuji Testnet).
 
