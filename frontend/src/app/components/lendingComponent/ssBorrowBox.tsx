@@ -95,6 +95,10 @@ export default function LendBox() {
     <div className='w-full'>
       <form onSubmit={handleBorrow}>
         <div className="mb-4">
+          <label className="block text-gray-700 text-medium font-bold mb-2">
+            Deposit and Earn Interest
+          </label>
+          <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Select Token:
           </label>

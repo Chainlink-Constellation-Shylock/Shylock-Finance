@@ -92,7 +92,7 @@ export default function LendBox() {
       <form onSubmit={handleWithdraw}>
         <div className="mb-4">
           <label className="block text-gray-700 text-medium font-bold mb-2">
-            Withdraw and Earn Interest
+            Withdraw Liquidity
           </label>
           <hr/>
           <label className="block text-gray-700 text-sm font-bold mb-2">
