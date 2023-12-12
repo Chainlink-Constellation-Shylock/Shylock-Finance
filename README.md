@@ -141,9 +141,9 @@ To start using Shylock Finance, users must first connect their wallet to the pla
 
 ### 5.1. Testing
 
-- Unit Testing @shylock_compound/test/unit
+**- Unit Testing** @shylock_compound/test/unit
 
-    - ShylockCErc20.t.sol -> Testing the basic functions of the ShylockCompound token
+    - ShylockCErc20.t.sol - Testing the basic functions of the ShylockCompound token
       - testMint
       - testRedeem
       - testAddDaoReserve
@@ -152,7 +152,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
       - testWithdrawMemberReserve
       - testBorrow
       - testRepayBorrow
-  - ShylockGovernance.t.sol -> Verify that functions that retrieve MemberCap, Reputation, etc. work well with
+  - ShylockGovernance.t.sol - Verify that functions that retrieve MemberCap, Reputation, etc. work well with
       - testGetDaoInfo
       - testGetMemberCollateralRate
       - testGetMemberCap
@@ -163,16 +163,31 @@ To start using Shylock Finance, users must first connect their wallet to the pla
       - testSetDaoDataOrigin
       - testSetQuorum
       - testModifyReputation
-  - ShylockGovernanceVote.t.sol -> Test the Propose feature of your governance contract
+  - ShylockGovernanceVote.t.sol - Test the Propose feature of your governance contract
  
-- Integration Testing(Deploy Script) @shylock_compound/script
+**- Integration Testing(Deploy Script)** @shylock_compound/script
   
     - ShylockDeploy.s.sol -> Deploy and Live deposing Test of Shylock Protocol without Crosschain Functionality
     - ShylockDeployCross.s.sol -> Deploy and Live deposit testing of the Shylock Protocol, including cross-chain functionality.
 
 ### 5.2. Contributing
 
-## 6. Roadmap & Future Plans
+
+
+## 6. What We learned and cared about
+
+**While implementing the lending part**
+we had to completely change the existing compound structure, where the reserve deposited by Dao and members is not used for other Dao and members, but is compounded to pay higher interest to LPs.
+we create a structure called AccountReserve and implemented getHypotheticalAccountReserveInternal function that checks for the reserve, similar to getHypotheticalAccountLiquidityInternal. 
+We cared about the accuracy of the calculation because there had to be a percentage that the protocol guaranteed Dao and a percentage that Dao guaranteed the user. Along the way, we ran into problems like stack too deep.
+
+**Lessons learned from creating CrossChain, DID, Chainlink Functions and more**
+
+Impressed with the idea, we organized the structure early and started development
+But it was not easy to integrate the CrossChain implementation, DID, Chainlink function, and price oracle into the complex low-collateral lending protocol structure.
+Thanks to the modular structure, we were able to efficiently divide the work among team members. 
+
+## 7. Roadmap & Future Plans
 
 - [x] **Phase 1**: Basic Features
   - [x] Liquidity Pool
@@ -189,26 +204,26 @@ To start using Shylock Finance, users must first connect their wallet to the pla
   - [ ] Develop more advanced liquidation system
   - [ ] Dao verification with Polygon ID
 
-## 7. License
+## 8. License
 
 MIT License
 
 See [`LICENSE.md`](LICENSE.md) for details
 
-## 8. Authors & Contact Information
+## 9. Authors & Contact Information
 
 ### Sangwon Moon
 
-- Email:
-- Github:
-- LinkedIn:
-- Twitter:
-- Telegram:
+- Email: san4865@gmail.com
+- Github: [@sangwonmoonkr](github.com/sangwonmoonkr)
+- LinkedIn: [문상원](https://www.linkedin.com/in/sangwon-moon-39ba0211a/)
+- Twitter: [@spotlss_mnd](https://twitter.com/spotlss_mnd)
+- Telegram: [@icanply](https://t.me/icanply)
 
 ### Seungmin Jeon
 
-- Email:
-- Github:
+- Email: 
+- Github: 
 - LinkedIn:
 - Twitter:
 - Telegram:
