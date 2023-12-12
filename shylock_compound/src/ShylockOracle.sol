@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import "@chainlink/contracts/interfaces/AggregatorV3Interface.sol";
 import { PriceOracle } from "./compound/PriceOracle.sol";

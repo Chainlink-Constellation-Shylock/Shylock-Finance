@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSD-3-Clause
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.20;
 
 import "./ShylockCErc20.sol";
 import "./crosschain/ICcipGateway.sol";
@@ -12,6 +12,7 @@ import "./crosschain/ICcipGateway.sol";
 
 
 contract ShylockCErc20Crosschain is ShylockCErc20 {
+    address public TokenpoolContract;
 
     constructor(address underlying_,
                 ShylockComptrollerInterface comptroller_,
@@ -23,13 +24,13 @@ contract ShylockCErc20Crosschain is ShylockCErc20 {
                 address payable admin_,
                 address ccipGateWay_
                 ) ShylockCErc20(underlying_,
-                                                        comptroller_,
-                                                        interestRateModel_,
-                                                        initialExchangeRateMantissa_,
-                                                        name_,
-                                                        symbol_,
-                                                        decimals_,
-                                                        admin_) {
+                                comptroller_,
+                                interestRateModel_,
+                                initialExchangeRateMantissa_,
+                                name_,
+                                symbol_,
+                                decimals_,
+                                admin_) {
                 ccipGateWay = ccipGateWay_;
     }
 
@@ -41,7 +42,14 @@ contract ShylockCErc20Crosschain is ShylockCErc20 {
         bytes4 functionSelector = bytes4(keccak256("doTransferOut(address,uint)"));
 
         bytes memory data = abi.encodeWithSelector(functionSelector, to, amount);
+        // data = abi.encodePacked(data, _msgSender());
 
-        CcipGatewayInterface(ccipGateWay).sendMessage(_msgSender(), data);
+        CcipGatewayInterface(ccipGateWay).sendMessage(TokenpoolContract, data);
     }
+    
+    function setTokenpoolContract(address _TokenpoolContract) external {
+        TokenpoolContract = _TokenpoolContract;
+    }
+
+    
 }

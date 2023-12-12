@@ -16,14 +16,14 @@ contract ReciveContract is SimpleERC2771Context{
 
   function trustedForwarder() override public view virtual returns (address) {
         return receiveGateway;
-    }
-
+  }
 
   event Ping(string text, address sender);
   function ping(string memory text) public {
     emit Ping(text, _msgSender());
   }
 }
+
 
 contract ReceiveGateway {
 
@@ -53,6 +53,7 @@ contract ReceiveGateway {
         // Call the function to handle the message.
         (bool success, bytes memory returnData) = fromToConnection[sender].call(encodedCall);
     }
+
 }
 
 
@@ -84,6 +85,10 @@ contract SenderGateway {
     }
 }
 
+contract CrossGateway is ReceiveGateway, SenderGateway {
+
+}
+
 contract Router {
   //   struct Any2EVMMessage {
   //   bytes32 messageId; // MessageId corresponding to ccipSend on source.
@@ -104,7 +109,7 @@ contract Router {
   }
 }
 
-contract Sender {
+contract SenderContract {
     address public senderGateway;
     function setSenderGateway(address _senderGateway) public {
         senderGateway = _senderGateway;
@@ -120,23 +125,23 @@ contract Sender {
 }
 
 
-
 contract CrosschainTest {
   function setUp() public {
   }
   function testPing() public {
     ReciveContract receiveContract = new ReciveContract();
-    ReceiveGateway receiveGateway = new ReceiveGateway();
+    CrossGateway receiveGateway = new CrossGateway();
     receiveContract.setReciverGateway(address(receiveGateway));
-    SenderGateway senderGateway = new SenderGateway();
+    CrossGateway senderGateway = new CrossGateway();
     senderGateway.setReciverGateway(address(receiveGateway));
     senderGateway.setRouter(address(new Router()));
 
 
-    Sender sender = new Sender();
-    sender.setSenderGateway(address(senderGateway));
+    SenderContract senderContract = new SenderContract();
+    senderContract.setSenderGateway(address(senderGateway));
     receiveGateway.setFromToConnection(address(senderGateway), address(receiveContract));
-    sender.triggerPing(address(receiveContract), "hello");
+    senderContract.triggerPing(address(receiveContract), "hello");
+    console.log(address(this));
   }
   
 }

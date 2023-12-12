@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
+import {CcipGatewayInterface} from "./ICcipGateway.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/interfaces/LinkTokenInterface.sol";
 import {Client} from "@chainlink/contracts-ccip/ccip/libraries/Client.sol";
 import {CCIPReceiver} from "@chainlink/contracts-ccip/ccip/applications/CCIPReceiver.sol";
-import {CcipGatewayInterface} from "./ICcipGateway.sol";
+
 
 abstract contract IERC20 {
     function transfer(address recipient, uint256 amount) external virtual returns (bool);
@@ -15,6 +16,8 @@ contract CTokenPool {
     IERC20 immutable public token;
 
     CcipGatewayInterface immutable public ccipGateWay;
+
+    address public shERC20Contract;
 
     mapping(address => uint256) public deposits;   // Depsitor Address => amount
     mapping(address => uint256) public borrowings; // Borrower Address => amount
@@ -30,6 +33,10 @@ contract CTokenPool {
     modifier onlyGateway() {
         require(msg.sender == address(ccipGateWay), "Only gateway can call this function");
         _;
+    }
+
+    function setShERC20Contract(address _shERC20Contract) external {
+        shERC20Contract = _shERC20Contract;
     }
 
     function doTransferOut(address to, uint amount) public onlyGateway {
@@ -52,7 +59,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
 
     function addMemberReserve(address dao, uint256 amount) external payable {
@@ -65,7 +72,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
     
     function withdrawDaoReserve(uint256 amount) public {
@@ -80,7 +87,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
 
     function withdrawMemberReserve(address dao, uint256 amount) public {
@@ -95,7 +102,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector, dao, amount);
         data = abi.encodePacked(data, msg.sender);
         
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
 
     function borrow(address dao, uint dueTimestamp, uint amount) public {
@@ -105,7 +112,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector,dao,dueTimestamp,amount);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
 
     function repayBorrow(address dao, uint amount, uint index) public {
@@ -115,7 +122,7 @@ contract CTokenPool {
         bytes memory data = abi.encodeWithSelector(functionSelector,dao,amount,index);
         data = abi.encodePacked(data, msg.sender);
 
-        ccipGateWay.sendMessage(address(0), data);
+        ccipGateWay.sendMessage(shERC20Contract, data);
     }
 
 }
