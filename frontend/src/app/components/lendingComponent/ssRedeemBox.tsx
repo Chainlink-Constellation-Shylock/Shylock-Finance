@@ -4,7 +4,7 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/re
 import { ethers } from 'ethers';
 import { getChainName } from '../../utils/getChainName';
 import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
-import { getMockERC20Address, getDaoAddress } from '@/app/utils/getAddress';
+import { getMockERC20Address, getCERC20Address, getDaoAddress } from '@/app/utils/getAddress';
 import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
@@ -44,9 +44,9 @@ export default function LendBox() {
         console.log('ChainId not found');
         return;
       }
-      const mockERC20Address = getMockERC20Address(chainId);
+      const shylockCERC20Address = getCERC20Address(chainId);
 
-      const contract = new ethers.Contract(mockERC20Address, ShylockCErc20Abi, signer);
+      const contract = new ethers.Contract(shylockCERC20Address, ShylockCErc20Abi, signer);
       toast.info('Redeeming...', {
         position: "top-right",
         autoClose: 15000,

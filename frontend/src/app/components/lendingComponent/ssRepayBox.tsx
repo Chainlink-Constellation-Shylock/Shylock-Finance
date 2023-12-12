@@ -74,7 +74,7 @@ export default function LendBox() {
         progress: undefined,
         theme: "dark",
       });
-      const tx = await cTokencontract.repayBorrow(ethers.utils.parseUnits(repayAmount));
+      const tx = await cTokencontract.repayBorrow(daoAddress,ethers.utils.parseUnits(repayAmount),1);
 
       console.log(`Repaying ${repayAmount} ${selectedToken}`);
       console.log('Transaction:', tx);

@@ -64,7 +64,6 @@ export default function AddCollateralBox() {
 
       const approveTx = await contract.approve(cERC20Address, ethers.utils.parseUnits(addAmount));
       console.log('Transaction:', approveTx);
-      await approveTx.wait();
 
       toast.info('Adding Collateral...', {
         position: "top-right",
