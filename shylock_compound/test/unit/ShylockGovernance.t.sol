@@ -57,8 +57,8 @@ contract ShylockGovernanceTest is Test, CompoundDeployment {
         (uint reputation,)= governance.memberInfos(member); 
         
         // expected collateral rate is 252.5%
-        uint expectedCollateralRate = MANTISSA.mulDiv(505, 2);
-        
+        uint expectedCollateralRate = MANTISSA.mulDiv(505, 200);
+        console.log("memberCollateralRate: ", memberCollateralRate);
         assertEq(reputation, 50);
         assertEq(memberCollateralRate, expectedCollateralRate);
     }
@@ -149,7 +149,6 @@ contract ShylockGovernanceTest is Test, CompoundDeployment {
         address member_
     ) public returns (MockConsumer, ShylockGovernance) {
         MockConsumer _mockConsumer = new MockConsumer();
-        _mockConsumer.setScore(daoName_, member_, 60);
         uint256[] memory weights = new uint256[](1); 
         weights[0] = 100;
         address[] memory dataOrigins = new address[](1);

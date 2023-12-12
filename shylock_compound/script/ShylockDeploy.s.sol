@@ -4,11 +4,12 @@ pragma solidity ^0.8.13;
 import {Script} from "forge-std/Script.sol";
 import "forge-std/console.sol";
 import "../test/mock/ERC20Mock.sol";
+import "../test/mock/MockDao.sol";
 import "../src/compound/Unitroller.sol";
 import "../src/compound/JumpRateModelV2.sol";
-import "../src/compound/SimplePriceOracle.sol";
 import "../src/ShylockComptroller.sol";
 import "../src/ShylockCErc20.sol";
+import "../src/ShylockOracle.sol";
 import { ShylockGovernance } from "../src/ShylockGovernance.sol";
 import { MockConsumer } from "../test/mock/MockConsumer.sol";
 
@@ -26,8 +27,9 @@ contract ShylockDeploy is Script {
     ShylockCErc20 shERC20;
     Unitroller unitroller;
     JumpRateModelV2 interestRateModel;
-    SimplePriceOracle priceOracle;
+    ShylockOracle priceOracle;
     MockConsumer consumer;
+    MockDao mockDao;
     ShylockGovernance governance;
     address dao;
     address member;
@@ -49,7 +51,7 @@ contract ShylockDeploy is Script {
         owner = vm.addr(vm.envUint("PRIVATE_KEY"));
         console.log("owner: ", owner);
         member = owner;
-        dao = address(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+        dao = address(0);
         uint256[] memory weights = new uint256[](1); 
         weights[0] = 100;
         address[] memory dataOrigins = new address[](1);
@@ -58,7 +60,7 @@ contract ShylockDeploy is Script {
             daoName: "MockDao",
             tierThreshold: 2,
             numberOfTiers: 4,
-            daoCap: 100 * 1e18,
+            daoCap: 10000 * 1e18,
             protocolToDaoGuaranteeRate: 1e18,
             reputation: 5000,
             weights: weights,
@@ -85,9 +87,9 @@ contract ShylockDeploy is Script {
         return _unitroller;
     }
 
-    function deployPriceOracle() public returns (SimplePriceOracle) {
+    function deployPriceOracle(address mockToken) public returns (ShylockOracle) {
         // we need change this to our price oracle
-        SimplePriceOracle _priceOracle = new SimplePriceOracle();
+        ShylockOracle _priceOracle = new ShylockOracle(mockToken);
         
         console.log("priceOracle deployed: ", address(_priceOracle));
         return _priceOracle;
@@ -138,23 +140,26 @@ contract ShylockDeploy is Script {
         // deploy and initialize shylockCompound contracts
         mockERC20_main = address(mockERC20_main) != address(0) ? mockERC20_main : deployOurMockERC20("DAI", "DAI");
         unitroller = address(unitroller) != address(0) ? unitroller : deployUnitroller();
-        if(address(priceOracle) == address(0)){
-            priceOracle = deployPriceOracle();
-            priceOracle.setDirectPrice(address(mockERC20_main), 0.00042*10**18);
-            ShylockComptrollerInterface(address(unitroller))._setPriceOracle(priceOracle);
-        }
+        
     
         interestRateModel = address(interestRateModel) != address(0) ? interestRateModel :  new JumpRateModelV2(1, 1, 1, 100, owner);
-        shERC20 = address(shERC20) != address(0) ? shERC20 : deployShERC20(1e18, "shDAI", "shDAI", 8);
-
+        shERC20 = address(shERC20) != address(0) ? shERC20 : deployShERC20(2 ** 18, "shDAI", "shDAI", 8);
+        if(address(priceOracle) == address(0)){
+            priceOracle = deployPriceOracle(address(shERC20));
+            ShylockComptrollerInterface(address(unitroller))._setPriceOracle(priceOracle);
+        }
         // deploy and initialize governance contract
         if(address(consumer) == address(0)){
             consumer = deployMockConsumer();
-            consumer.setScore(daoInfo.daoName, member, 60);
             daoInfo.dataOrigins[0] = address(consumer);
+        }
+        if (address(mockDao) == address(0)) {
+            mockDao = new MockDao();
+            dao = address(mockDao);
         }
         if(address(governance) == address(0)){
             governance = deployGovernonce();
+            console.log("dao address: ", dao);
             governance.registerDao(
                 dao,
                 daoInfo.daoName,
@@ -167,6 +172,18 @@ contract ShylockDeploy is Script {
             governance.getMemberCap(dao, member);
             ShylockComptrollerInterface(address(unitroller)).setGovernanceContract(governance);
         }
+
+        // initial dao setup
+        mockERC20_main.mint(owner, 1_000_000 * 1e18);
+        mockERC20_main.mint(address(mockDao), 100_000 * 1e18);
+        console.log("mockERC20_main My balance: ", mockERC20_main.balanceOf(owner));
+        console.log("mockERC20_main DAO sbalance: ", mockERC20_main.balanceOf(address(mockDao)));
+        // Approval
+        mockDao.execute(
+            address(mockERC20_main), 
+            abi.encodeWithSignature("approve(address,uint256)", address(shERC20), 100_000 * 1e18)
+        );
+        mockDao.addDaoReserve(address(shERC20), 10 * 1e18);
       
         vm.stopBroadcast();
 

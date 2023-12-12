@@ -118,7 +118,6 @@ contract ShylockGovernanceVoteTest is Test, CompoundDeployment {
         address member_
     ) public returns (MockConsumer, ShylockGovernance) {
         MockConsumer _mockConsumer = new MockConsumer();
-        _mockConsumer.setScore(daoName_, member_, 60);
         uint256[] memory weights = new uint256[](1); 
         weights[0] = 100;
         address[] memory dataOrigins = new address[](1);

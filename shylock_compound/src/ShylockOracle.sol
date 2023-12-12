@@ -2,6 +2,8 @@
 pragma solidity ^0.8.19;
 
 import "@chainlink/contracts/interfaces/AggregatorV3Interface.sol";
+import { PriceOracle } from "./compound/PriceOracle.sol";
+import { CToken } from "./compound/CToken.sol";
 
 /**
  * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED
@@ -10,13 +12,15 @@ import "@chainlink/contracts/interfaces/AggregatorV3Interface.sol";
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 
-contract DataConsumerV3 {
+contract ShylockOracle is PriceOracle {
     AggregatorV3Interface internal avaxUsdDataFeed;
     AggregatorV3Interface internal ethUsdDataFeed;
-    address mockTokenAddr = 0xA0A92Fc977b988955d82cd53380c9ba762AA1046;
-    mapping(address => int256) tokenPrice;
+    address cTokenAddr;
+    mapping(address => uint256) tokenPrice;
 
-    constructor() {
+    constructor(address cToken) {
+        cTokenAddr = cToken;
+        tokenPrice[cTokenAddr] = 1000000000000000; // 0.001 * 10**18
         avaxUsdDataFeed = AggregatorV3Interface(
             0x5498BB86BC934c8D34FDA08E81D444153d0D06aD
         );
@@ -25,17 +29,18 @@ contract DataConsumerV3 {
         );
     }
 
-    function setDirectPrice(address asset, int256 _price) public {
+    function setDirectPrice(address asset, uint256 _price) public {
         tokenPrice[asset] = _price;
     }
 
-    function getUnderlyingPrice(address token) public view returns (int) {
-        if (token == 0xA0A92Fc977b988955d82cd53380c9ba762AA1046) {
-            return tokenPrice[token];
-        } else if (token == address(0)) {
-            return getAvaxEthChainlinkDataFeedLatestAnswer();
+    function getUnderlyingPrice(CToken cToken) override external view returns (uint) {
+        address tokenAddr = address(cToken);
+        if (tokenAddr == 0xA0A92Fc977b988955d82cd53380c9ba762AA1046) {
+            return tokenPrice[tokenAddr];
+        } else if (tokenAddr == address(0)) {
+            return uint(getAvaxEthChainlinkDataFeedLatestAnswer());
         } else {
-            return tokenPrice[token];
+            return tokenPrice[tokenAddr];
         }
     }
     /**
