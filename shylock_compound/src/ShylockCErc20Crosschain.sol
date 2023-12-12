@@ -12,7 +12,7 @@ import "./crosschain/ICcipGateway.sol";
 
 
 contract ShylockCErc20Crosschain is ShylockCErc20 {
-    address public TokenpoolContract;
+    address public destGateWay;
 
     constructor(address underlying_,
                 ShylockComptrollerInterface comptroller_,
@@ -44,11 +44,11 @@ contract ShylockCErc20Crosschain is ShylockCErc20 {
         bytes memory data = abi.encodeWithSelector(functionSelector, to, amount);
         // data = abi.encodePacked(data, _msgSender());
 
-        CcipGatewayInterface(ccipGateWay).sendMessage(TokenpoolContract, data);
+        CcipGatewayInterface(ccipGateWay).sendMessage(destGateWay, data);
     }
     
-    function setTokenpoolContract(address _TokenpoolContract) external {
-        TokenpoolContract = _TokenpoolContract;
+    function setDestGateWay(address _destGateWay) external {
+        destGateWay = _destGateWay;
     }
 
     

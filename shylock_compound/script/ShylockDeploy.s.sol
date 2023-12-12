@@ -38,7 +38,7 @@ contract ShylockDeploy is Script {
     ERC20Mock mockERC20_sub;
 
 
-    function setUp() public {
+    function setUp() virtual public {
         string memory fujiRPC = "https://api.avax-test.network/ext/bc/C/rpc";
         string memory sepoliaRPC = "https://rpc.sepolia.org";
 
@@ -132,7 +132,7 @@ contract ShylockDeploy is Script {
         return _shERC20;
     }
 
-    function run() external {
+    function run() virtual external {
         console.log("#### On Main Chain ####");
         vm.selectFork(rpcIndex[main]);
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
