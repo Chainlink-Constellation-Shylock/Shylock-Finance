@@ -1,22 +1,21 @@
 export function getMockERC20Address(chainId: number) {
   if (chainId === 43113) {
-    return "0xF0452f5cB881C3fF5f8E81dD6De7ACB6E1df4375";
+    return "0xdA1E80e44B89F6a25e273f5e8A6E12a487e9fF65";
   } else {
-    return "0xF87f500691277971aF04D4F8eb3DB2C5CFCAcdec";
+    return "0x7D93981c72d974999C0dAC29D6502f47f213e274";
   }
 }
 
 export function getCERC20Address(chainId: number) {
   if (chainId === 43113) {
-    return "0xE3777aCccBa34F04E1cb9e05D16644F60CbCb489";
+    return "0x64D31bffC434C64f694Fdae11f3144413356A636";
   } else {
-    // TODO: change to gateway address maybe?
-    return "0xe1988030b35095BE6FF9F527e9C4dE73A101C1A0";
+    return "0xeBbAE973653c0e4C309ce4E3D453dD6F54425C17";
   }
 }
 
 export function getDaoAddress() {
-  return "0x7878099b167Abed0eB458727dCFe82200E4f7123";
+  return "0x13fc9A39920f3de625763Aef00DE210F96EB345a";
 }
 
 export function getCurrentTimestamp() {

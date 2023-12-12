@@ -19,7 +19,7 @@ export default function MemberComponent() {
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
       const shylockComptroller = new ethers.Contract(
-        "0x889035B48230ADbb630F7Ca9F673e4A72C87e9dd",
+        "0xF656e43A23571d07Dd7c770Ffb6228Aa355D1b8D",
         ShylockComptrollerAbi,
         signer
       );
