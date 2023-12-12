@@ -63,7 +63,6 @@ export default function LendBox() {
 
       const approveTx = await contract.approve(cERC20Address, ethers.utils.parseUnits(depositAmount));
       console.log('Transaction:', approveTx);
-      await approveTx.wait();
 
       toast.info('Depositing...', {
         position: "top-right",

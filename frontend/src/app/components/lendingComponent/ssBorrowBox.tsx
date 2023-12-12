@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers5/react';
 import { ethers } from 'ethers';
-import { getChainName } from '@/app/utils/getChainName';
-import { ShylockCErc20Abi } from '@/app/utils/abi/ShylockCErc20Abi';
-import { getCERC20Address, getDaoAddress, getCurrentTimestamp } from '@/app/utils/getAddress';
+import { getChainName } from '../../utils/getChainName';
+import { ShylockCErc20Abi } from '../../utils/abi/ShylockCErc20Abi';
+import { getCERC20Address, getDaoAddress, getCurrentTimestamp } from '../../utils/getAddress';
 import { toast, ToastContainer } from 'react-toastify';
 
 export default function LendBox() {
@@ -39,16 +39,12 @@ export default function LendBox() {
     try {
       const provider = new ethers.providers.Web3Provider(walletProvider);
       const signer = provider.getSigner();
-      if (!chainId) {
+      if (!chainId || !address) {
         console.log('ChainId not found');
         return;
       }
-      const cErc20Address = getCERC20Address(chainId);
-      const shylockCERC20 = new ethers.Contract(
-        cErc20Address,
-        ShylockCErc20Abi,
-        signer
-      );
+      const cERC20Address = getCERC20Address(chainId);
+      const shylockCERC20 = new ethers.Contract(cERC20Address, ShylockCErc20Abi, signer);
       toast.info('Borrowing...', {
         position: "top-right",
         autoClose: 15000,
@@ -59,15 +55,12 @@ export default function LendBox() {
         progress: undefined,
         theme: "dark",
       });
-      const tx = await shylockCERC20.borrow(
-        daoAddress,
-        // 3 weeks from now
-        getCurrentTimestamp() + 181440,
-        ethers.utils.parseUnits(borrowAmount)
-      );
-      await tx.wait();
+      const dueTimeStamp = getCurrentTimestamp() + 181440;
+
+      const tx = await shylockCERC20.borrow(daoAddress, dueTimeStamp, ethers.utils.parseUnits(borrowAmount));
+      const receipt = await tx.wait();
       console.log('Borrow transaction completed');
-      toast.success(`Success! Here is your transaction:${tx.receipt.transactionHash} `, {
+      toast.success(`Success! Here is your transaction:${receipt.transactionHash} `, {
         position: "top-right",
         autoClose: 18000,
         hideProgressBar: false,
