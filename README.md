@@ -164,7 +164,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
       - testSetDaoDataOrigin
       - testSetQuorum
       - testModifyReputation
-      - 
+  
   - ShylockGovernanceVote.t.sol - Test the Propose feature of your governance contract
  
 - Integration Testing(Deploy Script) **@shylock_compound/script**
@@ -179,6 +179,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
 ## 6. What We learned and cared about
 
 **While implementing the lending part**
+
 we had to completely change the existing compound structure, where the reserve deposited by Dao and members is not used for other Dao and members, but is compounded to pay higher interest to LPs.
 we create a structure called AccountReserve and implemented getHypotheticalAccountReserveInternal function that checks for the reserve, similar to getHypotheticalAccountLiquidityInternal. 
 We cared about the accuracy of the calculation because there had to be a percentage that the protocol guaranteed Dao and a percentage that Dao guaranteed the user. Along the way, we ran into problems like stack too deep.
