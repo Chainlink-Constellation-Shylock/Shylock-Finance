@@ -14,6 +14,18 @@ This groundbreaking approach allows users to borrow amounts exceeding their coll
 
 The name **"Shylock"** is inspired by a character from William Shakespeare's "The Merchant of Venice." Known as a stringent moneylender, Shylock's character is synonymous with strict lending terms. In contrast, Shylock Finance reinterprets this concept for the DeFi world, focusing on innovative and flexible lending solutions. While drawing inspiration from Shylock’s adherence to strict principles, our project diverges by promoting a more equitable and accessible financial ecosystem.
 
+### 1.1. Inspiration
+
+Why can't we get credit in the web3 world? Unsecured loans, like traditional credit, seem too risky on the Web3. We thought that our activities, efforts and reputation on Dao could act as credit. So we came up with a low-collateralized loan that uses Dao's activities as credit and is jointly guaranteed by Dao and the protocol. 
+
+From a user's perspective, it would be a very powerful welfare benefit for Dao, as it would be the only low-collateralized loan they would have to take care of urgent needs.
+
+For Dao, it's a way to reward loyal contributors without minting new tokens. Not only does this satisfy both users and Dao, but it also creates a virtuous cycle as the harder an individual works, the more collateral they can back.
+
+From an LP perspective, the protocol is also very attractive. Since the interest rate is higher than normal due to the low collateral nature of the loan, LPs will see it as a lending protocol where they can get high returns with a little bit of risk. As the liquidity increases, the amount of money available to users and Dao will also increase, so We think this is also a virtuous cycle that will lead to explosive growth.
+
+Ultimately, we want to be the first step in a web3 where activities and positions on Dao will be seen as a profession, where we will be able to get credit for income and jobs on web2.
+
 ## 2. Project Overview
 
 ### 2.1. Architecture
@@ -128,6 +140,35 @@ To start using Shylock Finance, users must first connect their wallet to the pla
 ## 5. Testing & Development
 
 ### 5.1. Testing
+
+- Unit Testing @shylock_compound/test/unit
+
+    - ShylockCErc20.t.sol -> Testing the basic functions of the ShylockCompound token
+      - testMint
+      - testRedeem
+      - testAddDaoReserve
+      - testWithdrawDaoReserve
+      - testAddMemberReserve
+      - testWithdrawMemberReserve
+      - testBorrow
+      - testRepayBorrow
+  - ShylockGovernance.t.sol -> Verify that functions that retrieve MemberCap, Reputation, etc. work well with
+      - testGetDaoInfo
+      - testGetMemberCollateralRate
+      - testGetMemberCap
+      - testGetMemberReputationInterest
+      - testSetDaoCap
+      - testSetProtocolToDaoGuaranteeRate
+      - testSetDaoTierNumberAndThreshold
+      - testSetDaoDataOrigin
+      - testSetQuorum
+      - testModifyReputation
+  - ShylockGovernanceVote.t.sol -> Test the Propose feature of your governance contract
+ 
+- Integration Testing(Deploy Script) @shylock_compound/script
+  
+    - ShylockDeploy.s.sol -> Deploy and Live deposing Test of Shylock Protocol without Crosschain Functionality
+    - ShylockDeployCross.s.sol -> Deploy and Live deposit testing of the Shylock Protocol, including cross-chain functionality.
 
 ### 5.2. Contributing
 
