@@ -141,7 +141,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
 
 ### 5.1. Testing
 
-**- Unit Testing** @shylock_compound/test/unit
+- Unit Testing **@shylock_compound/test/unit**
 
     - ShylockCErc20.t.sol - Testing the basic functions of the ShylockCompound token
       - testMint
@@ -152,6 +152,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
       - testWithdrawMemberReserve
       - testBorrow
       - testRepayBorrow
+      
   - ShylockGovernance.t.sol - Verify that functions that retrieve MemberCap, Reputation, etc. work well with
       - testGetDaoInfo
       - testGetMemberCollateralRate
@@ -163,9 +164,10 @@ To start using Shylock Finance, users must first connect their wallet to the pla
       - testSetDaoDataOrigin
       - testSetQuorum
       - testModifyReputation
+      - 
   - ShylockGovernanceVote.t.sol - Test the Propose feature of your governance contract
  
-**- Integration Testing(Deploy Script)** @shylock_compound/script
+- Integration Testing(Deploy Script) **@shylock_compound/script**
   
     - ShylockDeploy.s.sol -> Deploy and Live deposing Test of Shylock Protocol without Crosschain Functionality
     - ShylockDeployCross.s.sol -> Deploy and Live deposit testing of the Shylock Protocol, including cross-chain functionality.
