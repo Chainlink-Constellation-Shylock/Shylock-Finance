@@ -177,7 +177,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
   #### Deployment
   December 11 @ 11:17 pm ET
  
-  ** Avalanche Fuji Testnet **:
+  **Avalanche Fuji Testnet**:
 
   - mockERC20 deployed:  0xdA1E80e44B89F6a25e273f5e8A6E12a487e9fF65
   - unitroller deployed:  0xF656e43A23571d07Dd7c770Ffb6228Aa355D1b8D
@@ -187,7 +187,7 @@ To start using Shylock Finance, users must first connect their wallet to the pla
   - mockConsumer deployed:  0xe9aa3DC63bf97ae962D4ab23Aa0D3846A80C8e40
   - governance deployed:  0x7A75a54dfdEdE792536415d152f49bf00dd3a941
  
-  ** Ethereum Sepolia Testnet **:
+  **Ethereum Sepolia Testnet**:
 
   - mockERC20 deployed:  0x7D93981c72d974999C0dAC29D6502f47f213e274
   - ccipGateWay deployed:  0xF407f4Aa43E88be166AF4A2ee8b23f6b99Ea7d2a
